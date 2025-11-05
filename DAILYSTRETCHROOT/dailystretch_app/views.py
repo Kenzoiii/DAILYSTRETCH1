@@ -9,6 +9,8 @@ from django.conf import settings
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from .models import Routine, UserSettings, Favorite
+from .models import Profile
+
 
 # ====== Registration ======
 def register_view(request):
@@ -144,7 +146,29 @@ def favorite_list(request):
 
 @login_required(login_url='login')
 def profile_segment(request):
-    return render(request, 'segments/profile.html')
+    profile, created = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        print("=== PROFILE UPDATE POST RECEIVED ===")  # debug line
+        print(request.POST)
+        print(request.FILES)
+
+        bio = request.POST.get('bio', '')
+        date_of_birth = request.POST.get('date_of_birth', '')
+        profile_picture = request.FILES.get('profile_picture')
+
+        profile.bio = bio
+        if date_of_birth:
+            profile.date_of_birth = date_of_birth
+        if profile_picture:
+            profile.profile_picture = profile_picture
+
+        profile.save()
+        print("=== PROFILE SAVED ===")
+        messages.success(request, "Profile updated successfully!")
+        return redirect('profile')  # or the correct URL name
+
+    return render(request, 'segments/profile.html', {'profile': profile})
 
 
 @login_required(login_url='login')

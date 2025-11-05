@@ -1,96 +1,99 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DailyStretch Dashboard</title>
-  <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/dashboard.css' %}">
-  <link rel="icon" href="{% static 'dailystretch_app/images/logo.png' %}" type="image/png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DailyStretch Dashboard</title>
+    <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/dashboard.css' %}">
+    <link rel="icon" href="{% static 'dailystretch_app/images/logo.png' %}" type="image/png">
 </head>
+
 <body>
 
-  <main class="dashboard">
-    <section class="welcome">
-      <h2>Welcome back, {{ request.user.username }}! 👋</h2>
-      <p>Ready to continue your wellness journey?</p>
-    </section>
+    <main class="dashboard">
+        <section class="welcome">
+            <h2>Welcome back, {{ request.user.username }}! 👋</h2>
+            <p>Ready to continue your wellness journey?</p>
+        </section>
 
-    <section class="main-content">
-      <div class="study-session card">
-        <div class="session-header">
-          <h3>Study Session</h3>
-          <button id="switch-btn">Switch to Break</button>
-        </div>
-        <div class="timer">
-          <h1 id="time-display">{{ study_duration|stringformat:"02d" }}:00</h1>
-          <div class="progress-bar">
-            <div class="progress"></div>
-          </div>
-          <div class="controls">
-            <button id="start-btn">▶ Start</button>
-            <button id="reset-btn">⟳</button>
-          </div>
-          <button id="below">Focus for {{ study_duration }} minutes</button>
-        </div>
-      </div>
-      <div class="reminders card">
-        <h3>Reminders</h3>
-        <div class="toggle" id="top">
-          <div>
-            <h4>Stretch Reminders</h4>
-            <p>Get notified to take stretch breaks</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="stretch-toggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="toggle" id="bottom">
-          <div>
-            <h4>Hydration Reminders</h4>
-            <p>Get notified to drink water</p>
-          </div>
-          <label class="switch" >
-            <input type="checkbox" id="hydration-toggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-        <hr style="border: 1px solid rgba(0, 0, 0, 0.1);">
-        <p class="interval-label">Reminder interval:</p>
-        <div class="interval-btns">
-          <button>20 min</button>
-          <button class="active">30 min</button>
-          <button>60 min</button>
-        </div>
-      </div>
-    </section>
+        <section class="main-content">
+            <div class="study-session card">
+                <div class="session-header">
+                    <h3>Study Session</h3>
+                    <button id="switch-btn">Switch to Break</button>
+                </div>
+                <div class="timer">
+                    <h1 id="time-display">{{ study_duration|stringformat:"02d" }}:00</h1>
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                    <div class="controls">
+                        <button id="start-btn">▶ Start</button>
+                        <button id="reset-btn">⟳</button>
+                    </div>
+                    <button id="below">Focus for {{ study_duration }} minutes</button>
+                </div>
+            </div>
+            <div class="reminders card">
+                <h3>Reminders</h3>
+                <div class="toggle" id="top">
+                    <div>
+                        <h4>Stretch Reminders</h4>
+                        <p>Get notified to take stretch breaks</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="stretch-toggle" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle" id="bottom">
+                    <div>
+                        <h4>Hydration Reminders</h4>
+                        <p>Get notified to drink water</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="hydration-toggle" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <hr style="border: 1px solid rgba(0, 0, 0, 0.1);">
+                <p class="interval-label">Reminder interval:</p>
+                <div class="interval-btns">
+                    <button>20 min</button>
+                    <button class="active">30 min</button>
+                    <button>60 min</button>
+                </div>
+            </div>
+        </section>
 
-    <h2 id="quick">Quick Stats</h2>
-    <section class="quick-stats">
-      <div class="stat card">
-        <h4>Study Duration</h4>
-        <p id="quick-study-duration">{{ study_duration }} min</p>
-      </div>
-      <div class="stat card">
-        <h4>Break Duration</h4>
-        <p id="quick-break-duration">{{ break_duration }} min</p>
-      </div>
-      <div class="stat card">
-        <h4>Favorite Routines</h4>
-        <p>0</p>
-      </div>
-    </section>
-  </main>
+        <h2 id="quick">Quick Stats</h2>
+        <section class="quick-stats">
+            <div class="stat card">
+                <h4>Study Duration</h4>
+                <p id="quick-study-duration">{{ study_duration }} min</p>
+            </div>
+            <div class="stat card">
+                <h4>Break Duration</h4>
+                <p id="quick-break-duration">{{ break_duration }} min</p>
+            </div>
+            <div class="stat card">
+                <h4>Favorite Routines</h4>
+                <p>0</p>
+            </div>
+        </section>
+    </main>
 
-  <!-- These are now guaranteed to reflect Django settings on every load -->
-  <script>
-    window.studyDuration = {{ study_duration|default:25 }};
-    window.breakDuration = {{ break_duration|default:5 }};
-  </script>
-  <!-- Audio assets for alarms -->
-  <audio id="ds-alarm" src="{% static 'dailystretch_app/audio/alarm.mp3' %}" preload="auto"></audio>
-  <audio id="ds-reminder-alarm" src="{% static 'dailystretch_app/audio/reminderalarm.mp3' %}" preload="auto"></audio>
-  <script src="{% static 'dailystretch_app/js/segments/dashboard.js' %}"></script>
+    <!-- These are now guaranteed to reflect Django settings on every load -->
+    <script>
+        window.studyDuration = {{ study_duration |default: 25 }};
+        window.breakDuration = {{ break_duration |default: 5 }};
+    </script>
+    <!-- Audio assets for alarms -->
+    <audio id="ds-alarm" src="{% static 'dailystretch_app/audio/alarm.mp3' %}" preload="auto"></audio>
+    <audio id="ds-reminder-alarm" src="{% static 'dailystretch_app/audio/reminderalarm.mp3' %}" preload="auto"></audio>
+    <script src="{% static 'dailystretch_app/js/segments/dashboard.js' %}"></script>
 </body>
+
 </html>

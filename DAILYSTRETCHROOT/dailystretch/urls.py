@@ -17,6 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from dailystretch_app import views
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,4 +41,5 @@ urlpatterns = [
     path('favorite-list/', views.favorite_list, name='favorite_list'),
     # API
     path('api/routines/', views.api_routines, name='api_routines'),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
