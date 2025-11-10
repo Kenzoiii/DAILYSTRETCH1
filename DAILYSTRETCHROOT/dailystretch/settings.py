@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 # ------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ------------------------------
 # Security
@@ -79,16 +81,28 @@ if DATABASE_URL:
         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600, ssl_require=True)
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'postgres',
-            'USER': 'postgres.toutspsgjnhlfryvevqi',
-            'PASSWORD': 'qUMJN?L&M.sq&X6',  # Supabase local dev
-            'HOST': 'aws-1-ap-southeast-1.pooler.supabase.com',
-            'PORT': '6543',
+    try:
+        # Try Supabase connection
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'postgres',
+                'USER': 'postgres.toutspsgjnhlfryvevqi',
+                'PASSWORD': 'qUMJN?L&M.sq&X6',
+                'HOST': 'aws-1-ap-southeast-1.pooler.supabase.com',
+                'PORT': '6543',
+                'OPTIONS': {'sslmode': 'require'},
+            }
         }
-    }
+    except Exception:
+        # Fallback to SQLite if Postgres fails
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            }
+        }
+
 
 # ------------------------------
 # Password validation
