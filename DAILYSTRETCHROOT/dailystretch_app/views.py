@@ -146,15 +146,14 @@ def favorite_list(request):
 
 @login_required(login_url='login')
 def profile_segment(request):
-<<<<<<< HEAD
     profile, created = Profile.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
-        print("=== PROFILE UPDATE POST RECEIVED ===")  # debug line
+        print("=== PROFILE UPDATE POST RECEIVED ===")  # for debugging
         print(request.POST)
         print(request.FILES)
 
-        bio = request.POST.get('bio', '')
+        bio = request.POST.get('bio', '').strip()
         date_of_birth = request.POST.get('date_of_birth', '')
         profile_picture = request.FILES.get('profile_picture')
 
@@ -167,28 +166,10 @@ def profile_segment(request):
         profile.save()
         print("=== PROFILE SAVED ===")
         messages.success(request, "Profile updated successfully!")
-        return redirect('profile')  # or the correct URL name
-
-    return render(request, 'segments/profile.html', {'profile': profile})
-=======
-    from .models import UserProfile
-
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-
-    if request.method == 'POST':
-        bio = request.POST.get('bio', '').strip()
-        avatar_url = request.POST.get('avatar_url', '').strip()
-
-        profile.bio = bio
-        profile.avatar_url = avatar_url
-        profile.save()
-
-        messages.success(request, "Profile updated successfully!")
-        return redirect('main')
+        return redirect('profile_segment')  # make sure this matches your URL name
 
     return render(request, 'segments/profile.html', {'profile': profile})
 
->>>>>>> 12b775cb9cf55336c60e147962ebb0fda5271d91
 
 
 @login_required(login_url='login')

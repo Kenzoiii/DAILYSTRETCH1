@@ -87,8 +87,9 @@
 
     <!-- These are now guaranteed to reflect Django settings on every load -->
     <script>
-        window.studyDuration = {{ study_duration |default: 25 }};
-        window.breakDuration = {{ break_duration |default: 5 }};
+        window.studyDuration = {{ study_duration|default:"25" }};
+        window.breakDuration = {{ break_duration|default:"5" }};
+
     </script>
     <!-- Audio assets for alarms -->
     <audio id="ds-alarm" src="{% static 'dailystretch_app/audio/alarm.mp3' %}" preload="auto"></audio>

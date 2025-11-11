@@ -1,7 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<<<<<<< HEAD
 
 <head>
     <meta charset="UTF-8" />
@@ -240,7 +239,6 @@
         <div class="modal-content">
             <h3>Edit Profile</h3>
 
-            <!-- form posts back to same URL (profile_segment view) -->
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
 
@@ -254,9 +252,11 @@
                 <label for="profile_picture">Profile Picture:</label><br>
                 <input type="file" name="profile_picture" id="profile_picture"><br><br>
 
-                <button type="submit">Save Changes</button>
+                <div class="modal-buttons">
+                    <button type="submit" class="save-btn">Save Changes</button>
+                    <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+                </div>
             </form>
-
         </div>
     </div>
 
@@ -285,42 +285,4 @@
     </script>
 
 </body>
-
 </html>
-=======
-<head>
-  <meta charset="UTF-8">
-  <title>My Profile | DailyStretch</title>
-  <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/profile.css' %}">
-</head>
-<body>
-  <main class="library-main">
-    <h2>My Profile</h2>
-    <p class="library-desc">Manage your bio and profile picture.</p>
-
-    <form method="POST" class="profile-form">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="bio">Bio:</label>
-        <textarea name="bio" id="bio" rows="4">{{ profile.bio }}</textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="avatar_url">Profile Picture URL:</label>
-        <input type="text" name="avatar_url" id="avatar_url" value="{{ profile.avatar_url }}">
-      </div>
-
-      {% if profile.avatar_url %}
-      <div class="avatar-preview">
-        <img src="{{ profile.avatar_url }}" alt="Profile Picture">
-      </div>
-      {% endif %}
-
-      <button type="submit" class="routine-btn">Save Profile</button>
-    </form>
-  </main>
-
-  <script src="{% static 'dailystretch_app/js/segments/profile.js' %}"></script>
-</body>
-</html>
->>>>>>> 12b775cb9cf55336c60e147962ebb0fda5271d91
