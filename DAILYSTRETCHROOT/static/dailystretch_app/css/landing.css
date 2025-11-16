@@ -230,7 +230,7 @@ section {
   background: linear-gradient(rgba(254, 242, 242, 1),rgba(255, 255, 255, 1));
   text-align: center;
   padding: 20px 20px;
-  min-height: 170vh;
+  min-height: 110vh;
   display: flex;
   flex-direction: column;
   justify-content: center;

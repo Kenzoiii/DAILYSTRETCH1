@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from .models import Routine, UserSettings, Favorite
 from .models import Profile
+from .models import UserSettings, Favorite
 
 
 # ====== Registration ======
@@ -90,9 +91,14 @@ def main_view(request):
 @login_required(login_url='login')
 def dashboard_segment(request):
     user_settings, created = UserSettings.objects.get_or_create(user=request.user)
+    
+    # Count the user's favorite routines
+    favorite_count = Favorite.objects.filter(user=request.user).count()
+    
     return render(request, 'segments/dashboard.html', {
         'study_duration': user_settings.study_duration,
-        'break_duration': user_settings.break_duration
+        'break_duration': user_settings.break_duration,
+        'favorite_count': favorite_count,  # <-- pass it to the template
     })
 
 

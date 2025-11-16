@@ -1,10 +1,11 @@
 body {
   font-family: 'Arimo', sans-serif;
   background: rgba(255, 255, 255, 1);
-  margin: 0;
+
   color: #1e1e1e;
   align-items: center;
   font-weight: 400;
+
 }
 
 
@@ -12,7 +13,8 @@ body {
 .dashboard {
   padding: 2rem;
   width: 90%;
-  margin-left: 50px;
+  align-items: center;
+  margin: 0 auto;
 }
 
 .welcome h2 {
@@ -75,7 +77,7 @@ body {
   padding: 0.8rem 2rem;
   border-radius: 8px;
   cursor: pointer;
-  width: 90%;
+  width: 100%;
 }
 
 #time-display {
