@@ -39,7 +39,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
 
     // ----------------- TIME FORMATTING -----------------
   function formatTime(s) {
-  const totalSeconds = Math.floor(s); // <- floor it here
+  const totalSeconds = Math.floor(s); 
   const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
   const sec = (totalSeconds % 60).toString().padStart(2, '0');
   return `${m}:${sec}`;
