@@ -33,6 +33,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       timerSeconds: 0,
       initialSeconds: 0,
       lastUpdate: null,
+
     };
 
     const TIMER_STORAGE_KEY = 'ds_timer_state_v2';
@@ -54,8 +55,8 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
         : 0;
       progressEl.style.width = pct + '%';
       belowBtn.textContent = state.isStudy
-        ? `Focus for ${window.studyDuration} minutes`
-        : `Break for ${window.breakDuration} minutes`;
+        ? `Focus for ${window.studyDuration} minute/s`
+        : `Break for ${window.breakDuration} minute/s`;
       switchBtn.textContent = state.isStudy ? 'Switch to Break' : 'Switch to Study';
       if (quickStudy) quickStudy.textContent = `${window.studyDuration} min`;
       if (quickBreak) quickBreak.textContent = `${window.breakDuration} min`;
@@ -154,8 +155,11 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
 
       if (state.timerSeconds <= 0) {
         state.timerSeconds = 0;
-        pauseTimer();
-        notifyFinish();
+
+        try { sessionStorage.removeItem(sessionKey); } catch (e) {}
+        notifyFinish(); 
+        switchMode();
+        
       }
 
       render();
@@ -164,14 +168,57 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       animationFrameId = requestAnimationFrame(tick);
     }
 
+    const sessionKey = 'ds_quote_shown';
     function startTimer() {
       if (state.isRunning) return;
+
+
       state.isRunning = true;
       state.lastUpdate = Date.now();
       startBtn.textContent = '\u23F8 Pause';
       cancelAnimationFrame(animationFrameId);
       animationFrameId = requestAnimationFrame(tick);
       saveTimerState();
+      
+    
+      if (!sessionStorage.getItem(sessionKey)) {
+      const quotes = [
+        "Creativity is just connecting things. – Steve Jobs",
+        "Happiness is when what you think, what you say, and what you do are in harmony. – Mahatma Gandhi",
+        "The biggest adventure you can take is to live the life of your dreams. – Oprah Winfrey",
+        "Lead from the back — and let others believe they are in front. – Nelson Mandela",
+        "Success is not final, failure is not fatal: It is the courage to continue that counts. – Winston Churchill",
+        "Success is not how high you have climbed, but how you make a positive difference to the world. – Roy T. Bennett",
+        "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work. And the only way to do great work is to love what you do. – Steve Jobs",
+        "It is our choices that show what we truly are, far more than our abilities. – J.K. Rowling",
+        "Every child is an artist. The problem is how to remain an artist once we grow up. – Pablo Picasso",
+        "Happiness is the key to success. If you love what you are doing, you will be successful. – Albert Schweitzer",
+        "A leader is one who knows the way, goes the way, and shows the way. – John C. Maxwell",
+        "You have power over your mind, not outside events. Realize this, and you will find strength. – Marcus Aurelius"
+      ];
+
+       const completionQuotes = [
+        "Well done! The journey of a thousand miles begins with a single step. – Lao Tzu",
+        "Great job! Continuous effort, not strength or intelligence, is the key to unlocking our potential. – Winston Churchill",
+        "You did it! Success is the sum of small efforts, repeated day in and day out. – Robert Collier",
+        "Session complete! Don’t watch the clock; do what it does. Keep going. – Sam Levenson",
+        "Excellent work! The secret of getting ahead is getting started. – Mark Twain",
+        "Nice! Quality is never an accident; it is always the result of intelligent effort. – John Ruskin",
+        "Another session finished! Energy and persistence conquer all things. – Benjamin Franklin",
+        "Well done! Motivation is what gets you started. Habit is what keeps you going. – Jim Ryun",
+        "Congrats! Great things are done by a series of small things brought together. – Vincent Van Gogh",
+        "Session completed! Don’t be afraid to give up the good to go for the great. – John D. Rockefeller"
+      ];
+      
+      let quote = '';
+      if(state.isStudy){
+        quote = quotes[Math.floor(Math.random() * quotes.length)];
+      }else{
+        quote = completionQuotes[Math.floor(Math.random() * completionQuotes.length)];
+      }
+      showToast(quote, 10000);
+      try { sessionStorage.setItem(sessionKey, '1'); } catch (e) { /* ignore */ }
+    }
     }
 
     function pauseTimer() {

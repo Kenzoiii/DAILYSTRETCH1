@@ -241,29 +241,3 @@ input:checked + .slider:before {
   font-weight: bold;
   margin-top: 0.5rem;
 }
-
-/* Toast notification used for quick feedback */
-#ds-toast {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  background: rgba(10,10,10,0.9);
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-  font-size: 14px;
-  font-weight: 500;
-  width: 50vh;
-  font-family: 'Arimo', sans-serif;
-  z-index: 9999;
-  text-align: center;
-  transform: translateY(8px);
-  opacity: 0;
-  transition: opacity 240ms ease, transform 240ms ease;
-}
-
-#ds-toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}

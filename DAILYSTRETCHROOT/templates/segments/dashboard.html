@@ -33,7 +33,7 @@
                         <button id="start-btn">▶ Start</button>
                         <button id="reset-btn">⟳</button>
                     </div>
-                    <button id="below">Focus for {{ study_duration }} minutes</button>
+                    <button id="below">Focus for {{ study_duration }} minute/s</button>
                 </div>
             </div>
             <div class="reminders card">
@@ -89,6 +89,7 @@
     <script>
         window.studyDuration = {{ study_duration|default:"25" }};
         window.breakDuration = {{ break_duration|default:"5" }};
+ 
 
     </script>
     <!-- Audio assets for alarms -->
