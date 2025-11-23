@@ -11,6 +11,25 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Routine, UserSettings, Favorite
 from .models import Profile
 from .models import UserSettings, Favorite
+import os
+import json
+from django.core.files import File
+
+
+#helper for creating profile with default picture 
+def create_profile_with_default_picture(user):
+    profile, created = Profile.objects.get_or_create(user=user)
+    if created and not profile.profile_picture:
+        # Path to your static default image
+        default_image_path = os.path.join(
+            settings.BASE_DIR,
+            'static/dailystretch_app/images/profilepicture.png'
+        )
+        
+        # Open the file and save it to the ImageField
+        with open(default_image_path, 'rb') as f:
+            profile.profile_picture.save('default.png', File(f), save=True)
+    return profile
 
 
 # ====== Registration ======
@@ -48,6 +67,7 @@ def register_view(request):
         user.save()
         messages.success(
             request, 'Account created successfully! Please login.')
+        create_profile_with_default_picture(user)
         return redirect('login')
 
     return render(request, 'dailystretch_app/register.html')
@@ -159,11 +179,28 @@ def profile_segment(request):
         print(request.POST)
         print(request.FILES)
 
+        name = request.POST.get('name', '').strip()
         bio = request.POST.get('bio', '').strip()
         date_of_birth = request.POST.get('date_of_birth', '')
         profile_picture = request.FILES.get('profile_picture')
 
         profile.bio = bio
+        # Update username if provided — validate uniqueness
+        if name:
+            if name != request.user.username:
+                if User.objects.filter(username=name).exclude(pk=request.user.pk).exists():
+                    # Username taken
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'ok': False, 'error': 'username_taken', 'message': 'That username is already taken.'}, status=400)
+                    else:
+                        messages.error(request, 'That username is already taken.')
+                        return redirect('profile_segment')
+                try:
+                    request.user.username = name
+                    request.user.save()
+                except Exception:
+                    # ignore save errors, continue
+                    pass
         if date_of_birth:
             profile.date_of_birth = date_of_birth
         if profile_picture:
@@ -171,10 +208,153 @@ def profile_segment(request):
 
         profile.save()
         print("=== PROFILE SAVED ===")
+
+        # If the request is AJAX (upload from the profile card), return JSON with the new image URL
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        # Attempt to sync to Supabase if configured
+        try:
+            SUPABASE_URL = getattr(settings, 'SUPABASE_URL', '')
+            SUPABASE_ANON_KEY = getattr(settings, 'SUPABASE_ANON_KEY', '')
+            if SUPABASE_URL and SUPABASE_ANON_KEY:
+                # call helper
+                try:
+                    update_supabase_profile(request.user, profile)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        if is_ajax:
+            # Build a sensible URL to return. If no profile picture, return empty string.
+            pic_url = ''
+            try:
+                if profile.profile_picture:
+                    pic_url = profile.profile_picture.url
+            except Exception:
+                pic_url = ''
+            # Return the updated values so client can use server-canonical data
+            return JsonResponse({'ok': True, 'profile_picture_url': pic_url, 'username': request.user.username, 'bio': profile.bio})
+
         messages.success(request, "Profile updated successfully!")
+        # If the form was submitted via fetch/AJAX (profile modal), return JSON
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # For modal/form AJAX saves return server-side canonical values
+            pic_url = ''
+            try:
+                if profile.profile_picture:
+                    pic_url = profile.profile_picture.url
+            except Exception:
+                pic_url = ''
+            return JsonResponse({'ok': True, 'username': request.user.username, 'bio': profile.bio, 'profile_picture_url': pic_url})
         return redirect('profile_segment')  # make sure this matches your URL name
 
     return render(request, 'segments/profile.html', {'profile': profile})
+
+
+
+@login_required(login_url='login')
+def upload_profile_photo(request):
+    """Endpoint to accept AJAX photo uploads from the profile card and return JSON."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    profile_picture = request.FILES.get('profile_picture')
+    if not profile_picture:
+        return JsonResponse({'ok': False, 'error': 'no_file'}, status=400)
+    # Server-side validation: allow only common image types and limit size
+    ALLOWED_MIME = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
+    MAX_BYTES = 5 * 1024 * 1024  # 5 MB
+
+    content_type = getattr(profile_picture, 'content_type', '')
+    size = getattr(profile_picture, 'size', None)
+
+    if content_type and content_type not in ALLOWED_MIME:
+        return JsonResponse({'ok': False, 'error': 'invalid_type', 'message': 'Unsupported image type.'}, status=400)
+    if size is not None and size > MAX_BYTES:
+        return JsonResponse({'ok': False, 'error': 'file_too_large', 'message': 'Image exceeds 5MB limit.'}, status=400)
+
+    try:
+        profile.profile_picture = profile_picture
+        profile.save()
+        pic_url = ''
+        try:
+            if profile.profile_picture:
+                pic_url = profile.profile_picture.url
+        except Exception:
+            pic_url = ''
+        # Try to sync the profile photo/url to Supabase if configured
+        try:
+            SUPABASE_URL = getattr(settings, 'SUPABASE_URL', '')
+            SUPABASE_ANON_KEY = getattr(settings, 'SUPABASE_ANON_KEY', '')
+            if SUPABASE_URL and SUPABASE_ANON_KEY:
+                try:
+                    update_supabase_profile(request.user, profile)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        return JsonResponse({'ok': True, 'profile_picture_url': pic_url})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': 'save_failed', 'message': str(e)}, status=500)
+
+
+def update_supabase_profile(user, profile):
+    """Attempt to PATCH the user's profile row in Supabase using the anon key.
+    Matches on email. This is best-effort and logs errors silently.
+    """
+    SUPABASE_URL = getattr(settings, 'SUPABASE_URL', '')
+    SUPABASE_ANON_KEY = getattr(settings, 'SUPABASE_ANON_KEY', '')
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return None
+
+    table = 'profiles'
+    # Build request URL to update rows where email matches
+    email = user.email
+    if not email:
+        return None
+
+    url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/{table}?email=eq.{email}"
+    headers = {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+    }
+    payload = {}
+    try:
+        # import requests lazily so Django can run without the dependency
+        try:
+            import requests
+        except ImportError:
+            try:
+                print('requests library not installed; skipping Supabase sync')
+            except Exception:
+                pass
+            return None
+
+        payload['username'] = user.username
+        payload['bio'] = profile.bio or ''
+        # include profile_picture url if present
+        try:
+            if profile.profile_picture:
+                payload['profile_picture'] = profile.profile_picture.url
+        except Exception:
+            pass
+
+        resp = requests.patch(url, headers=headers, data=json.dumps(payload), timeout=5)
+        if resp.status_code not in (200, 204):
+            # log but don't raise
+            try:
+                print('Supabase sync failed:', resp.status_code, resp.text)
+            except Exception:
+                pass
+        return resp
+    except Exception as e:
+        try:
+            print('Supabase update exception', e)
+        except Exception:
+            pass
+        return None
 
 
 

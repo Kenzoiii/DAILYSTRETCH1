@@ -1,5 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import os
+from django.core.files import File
 
 class Routine(models.Model):
     title = models.TextField()
@@ -30,21 +35,34 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     bio = models.TextField(blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(blank=True, null=True)
-    avatar_url = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'user_profile'
+    profile_picture = models.ImageField(
+        upload_to='profile_pictures/',
+        default='profile_pictures/default.png',  # <- default image
+        blank=True,
+        null=True
+    )
 
 
-    def __str__(self):
-        return self.user.username
+# Ensure a Profile is created for each new User and populate a default picture
+@receiver(post_save, sender=User)
+def create_profile_for_new_user(sender, instance, created, **kwargs):
+    if not created:
+        return
+    profile = Profile.objects.create(user=instance)
+
+    # Try to copy the project's static default image into the user's media profile picture
+    default_static_path = os.path.join(
+        settings.BASE_DIR,
+        'static', 'dailystretch_app', 'images', 'profilepicture.png'
+    )
+
+    if os.path.exists(default_static_path):
+        try:
+            with open(default_static_path, 'rb') as f:
+                profile.profile_picture.save('default.png', File(f), save=True)
+        except Exception:
+            # If saving fails, leave the default field alone (it already has a default path)
+            pass
 
 class Favorite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -50,9 +50,27 @@
         <button type="submit" class="save-btn">Save Timer Settings</button>
       </form>
 
-      <button onclick="window.location.href='{% url 'logout' %}'" class="logout-btn">Logout</button>
+      <button id="logout-btn" class="logout-btn">Logout</button>
     </div>
   </div>
   <script src="{% static 'dailystretch_app/js/segments/settings.js' %}"></script>
+  <script>
+    const logoutUrl = "{% url 'logout' %}";
+    document.getElementById('logout-btn').addEventListener('click', () => {
+    clearDashboardState();
+    window.location.href = logoutUrl;
+    });
+
+    const settingsForm = document.querySelector('form[action="{% url "settings" %}"]');
+    if (settingsForm) {
+      settingsForm.addEventListener('submit', () => {
+      try {
+        localStorage.removeItem('ds_timer_state_v2');
+      } catch (e) {
+        console.warn('Failed to clear old timer state', e);
+      }
+      });
+    }
+  </script>
 </body>
 </html>
