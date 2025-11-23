@@ -1,0 +1,197 @@
+body {
+  font-family: 'Arimo', sans-serif;
+  background: rgba(255, 255, 255, 1);
+  margin: 0;
+  color: #1e1e1e;
+  align-items: center;
+  width: 100%;
+  max-width: 120%;
+}
+.library-main {
+  padding: 2rem;
+  width: 90%;
+  margin-left: 50px;
+}
+.library-main h2{
+  margin-top: -1vh;
+  font-weight: 400;
+}
+.library-desc {
+  color: rgba(113, 113, 130, 1);
+  margin-top: -10px;
+  font-weight: 400;
+}
+.library-filters {
+
+  margin: 30px 0 16px 0;
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.library-filters div {
+  display: flex;
+  flex-direction: column;
+}
+.library-filters label,
+.library-filters input[type="checkbox"] {
+
+  font-weight: 400;
+  margin-bottom: 10px;
+
+}
+.library-filters select {
+  color: rgba(113, 113, 130, 1);
+  padding: 6px 15px;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  font-size: 1em;
+  margin-top: 4px;
+  width: 90vh;
+}
+.library-grid {
+  display: grid;
+  /* Force 3 cards per row on wide screens */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 21px;
+}
+
+/* Medium screens: 2 columns */
+@media (max-width: 900px) {
+  .library-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.lib-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(60,60,90,0.10);
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  padding: 22px 20px 22px 20px;
+
+}
+.lib-card-header {
+  font-size: 1.07em;
+  font-weight: 600;
+  color: #232323;
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.lib-card .star {
+  font-size: 1.4em;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.lib-card .lib-desc {
+  font-size: .99em;
+  color: #636373;
+  margin-bottom: 7px;
+}
+.lib-tags {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.lib-tag {
+  display: inline-block;
+  font-size: .95em;
+  padding: 4px 16px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 500;
+}
+.lib-tag.blue { background: #599be9; }
+.lib-tag.green { background: #4dc689; }
+.lib-tag.orange { background: #f6b36d; color: #432; }
+.lib-tag.gray { background: #707074; }
+.lib-tag.red { background: #d34241; color: #fff; }
+.lib-tag.purple { background: #ad6cff; }
+.routine-btn {
+  margin-top: auto;
+  background: #181818;
+  color: #fff;
+  font-size: 1em;
+  padding: 10px 0;
+  border-radius: 7px;
+  border: none;
+  width: 100%;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 3px 0 rgba(40,40,80,0.07);
+  display: flex; align-items: center; justify-content: center;
+}
+.routine-btn:hover { background: #333146; }
+.modal-bg {
+  position: fixed;
+  top:0; left:0; width:100vw; height:100vh;
+  background: rgba(46, 50, 63, 0.18);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 20;
+}
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(40,40,80,0.11);
+  padding: 36px 28px 30px 28px;
+  min-width: 320px;
+  max-width: 430px;
+  margin: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.timer-display {
+  font-size: 2.05em;
+  font-weight: 700;
+  color: #333146;
+  text-align: center;
+}
+#modalContent {
+  font-size: 1.03em;
+  color: #333;
+  margin-bottom: 6px;
+  text-align: left;
+}
+#modalStopBtn {
+  margin-top: 10px;
+}
+@media (max-width: 600px) {
+  .library-main { padding: 0 2vw; }
+  .library-grid { grid-template-columns: 1fr; }
+  .modal { min-width: 90vw; max-width: 96vw;}
+}
+
+body.dark .lib-card,
+body.dark .modal,
+body.dark .library-grid .lib-card {
+  background: #22223f !important;
+  color: #ededed !important;
+  border: 1px solid #282a36 !important;
+  box-shadow: 0 4px 18px rgba(60,60,90,0.12) !important;
+}
+
+body.dark .lib-card-header { color: #ededed !important; }
+body.dark .lib-card .star { color: #c6c6c6 !important; }
+body.dark .lib-card .star.active { color: #e7b900 !important; }
+body.dark .lib-card .lib-desc { color: #bdbdbd !important; }
+body.dark .lib-tag.gray { background: #484860 !important; color: #fff !important; }
+body.dark .routine-btn {
+  background: #131417 !important;
+  color: #ededed !important;
+}
+body.dark .routine-btn:hover { background: #23234b !important; }
+body.dark .modal-bg { background: rgba(14,18,34,0.73) !important; }
+body.dark .modal { background: #272a46 !important; color: #ededed !important; }
+body.dark .timer-display { color: #65e5dc !important; }
+body.dark .modal,
+body.dark .modal * {
+  color: #ededed !important;
+}
+body.dark #modalContent {
+  color: #ededed !important;
+}
