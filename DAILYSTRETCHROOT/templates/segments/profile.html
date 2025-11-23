@@ -6,48 +6,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile | DailyStretch</title>
-    <link rel="icon" href="{% static 'dailystretch_app/images/logo.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/profile.css' %}">
+    <link rel="icon" href="{% static 'dailystretch_app/images/logo.png' %}" type="image/png">
+    
 
 </head>
 
 <body>
 
     <main class="profile">
-        <h2>Your Profile</h2>
-        <p>Manage your personal information</p>
+    <h2>Your Profile</h2>
+    <p class="subtitle">Manage your personal information</p>
 
-        <div class="card" id="profile-card" data-name="{{ request.user.username }}" data-bio="{{ profile.bio|default_if_none:'' }}" data-dob="{{ profile.date_of_birth|date:'Y-m-d' }}">
-            {% if profile.profile_picture %}
-            <img class="profile-image" src="{{ profile.profile_picture.url }}" alt="Profile Picture">
-            {% else %}
-            <img class="profile-image" src="{% static 'dailystretch_app/images/default-profile.png' %}"
-                alt="Default Profile Picture">
-            {% endif %}
-            <div style="text-align:center; margin-top:10px;">
-                <button id="uploadPicBtn" class="edit-btn" style="background:#fff; color:#111; border:1px solid #e6e6e6; box-shadow:none;">
-                    <img src="{% static 'dailystretch_app/images/upload.png' %}" alt="upload" style="width:18px; vertical-align:middle; margin-right:8px"> Upload Picture
-                </button>
-                <input type="file" id="profile_picture_external" accept="image/*" style="display:none;">
-            </div>
+    <div class="card" id="profile-card" data-name="{{ request.user.username }}" data-bio="{{ profile.bio|default_if_none:'' }}" data-dob="{{ profile.date_of_birth|date:'Y-m-d' }}">
+        {% if profile.profile_picture %}
+        <img class="profile-image" src="{{ profile.profile_picture.url }}" alt="Profile Picture">
+        {% else %}
+        <img class="profile-image" src="{% static 'dailystretch_app/images/default-profile.png' %}" alt="Default Profile Picture">
+        {% endif %}
 
-            <div class="profile-info" style="margin-top:12px; text-align:left;">
-                <label style="font-size:0.85rem; color:#666;">Name</label>
-                <input type="text" id="pf-name" value="{{ request.user.username }}" readonly style="width:100%; padding:8px; border-radius:8px; border:1px solid #eee; background:#f5f6f8;">
-                <small id="name-count" style="color:#999; display:block; margin-top:6px;">{{ request.user.username|length }}/50 characters</small>
-
-                <label style="font-size:0.85rem; color:#666; margin-top:10px; display:block;">Bio</label>
-                <textarea id="pf-bio" rows="3" style="width:100%; padding:8px; border-radius:8px; border:1px solid #eee;" disabled>{{ profile.bio }}</textarea>
-                <small id="bio-count" style="color:#999; display:block; margin-top:6px;">{{ profile.bio|length|default:0 }}/200 characters</small>
-
-                <label style="font-size:0.85rem; color:#666; margin-top:10px; display:block;">Email</label>
-                <input type="text" id="pf-email" value="{{ request.user.email }}" readonly style="width:100%; padding:8px; border-radius:8px; border:1px solid #eee; background:#f5f6f8;">
-                <small style="color:#999; display:block; margin-top:6px;">Email cannot be changed</small>
-
-                <button class="edit-btn" id="editProfileBtn" style="width:100%; margin-top:14px; background:#06040a;">Edit Profile</button>
-            </div>
+        <div class="upload-btn-container">
+            <button id="uploadPicBtn" class="edit-btn">
+                <img src="{% static 'dailystretch_app/images/upload.png' %}" alt="upload"> Upload Picture
+            </button>
+            <input type="file" id="profile_picture_external" accept="image/*" style="display:none;">
         </div>
-    </main>
+
+        <div class="profile-info">
+            <label>Name</label>
+            <input type="text" id="pf-name" value="{{ request.user.username }}" readonly>
+            <small id="name-count">{{ request.user.username|length }}/50 characters</small>
+
+            <label>Bio</label>
+            <textarea id="pf-bio" rows="3" disabled>{{ profile.bio }}</textarea>
+            <small id="bio-count">{{ profile.bio|length|default:0 }}/200 characters</small>
+
+            <label>Email</label>
+            <input type="text" id="pf-email" value="{{ request.user.email }}" readonly>
+            <small>Email cannot be changed</small>
+
+            <button class="edit-btn" id="editProfileBtn">Edit Profile</button>
+        </div>
+    </div>
+</main>
+
 
     <!-- Edit Profile Modal -->
     <div class="modal" id="editProfileModal">
@@ -74,3 +76,4 @@
 
 </body>
 </html>
+`
