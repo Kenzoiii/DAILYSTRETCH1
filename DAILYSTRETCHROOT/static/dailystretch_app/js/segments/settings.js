@@ -20,4 +20,17 @@ function initSettingsDarkMode() {
   };
 }
 
+
+function clearDashboardState() {
+    try {
+        localStorage.removeItem('ds_timer_state_v2');
+        localStorage.removeItem('reminderIntervalMinutes');
+        sessionStorage.removeItem('ds_quote_shown');
+    } catch (e) {
+        console.warn("Failed to clear dashboard state", e);s
+    }
+}
+
+
+
 setTimeout(initSettingsDarkMode, 10);

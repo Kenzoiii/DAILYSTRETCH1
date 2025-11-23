@@ -36,6 +36,7 @@ urlpatterns = [
     path('main/library/', views.library_segment, name='library'),
     path('main/favorites/', views.favorites_segment, name='favorites'),
     path('main/profile/', views.profile_segment, name='profile'),
+    path('main/profile/upload-photo/', views.upload_profile_photo, name='upload_profile_photo'),
     path('main/settings/', views.settings_segment, name='settings'),
     path('favorite-toggle/', views.favorite_toggle, name='favorite_toggle'),
     path('favorite-list/', views.favorite_list, name='favorite_list'),

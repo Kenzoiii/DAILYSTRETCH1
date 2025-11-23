@@ -147,8 +147,8 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
     function tick() {
       if (!state.isRunning) return;
 
-      const now = Date.now();
-      const elapsed = (now - (state.lastUpdate || now)) / 1000;
+        const now = Date.now();
+        const elapsed = (now - (state.lastUpdate || now)) / 1000;
       state.lastUpdate = now;
 
       state.timerSeconds = Math.max(0, state.timerSeconds - elapsed);
@@ -250,7 +250,6 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
     // ----------------- EVENT LISTENERS -----------------
     startBtn.addEventListener('click', () => {
       if (state.timerSeconds <= 0) {
-        // If timer finished, reset first
         resetTimer();
         startTimer();
       } else {
