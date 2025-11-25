@@ -25,6 +25,14 @@
     <button class="tab" data-page="{% url 'favorites' %}"> <img src="{% static 'dailystretch_app/images/main/star.png' %}" alt="icon"><p>Favorites</p></button>
     <button class="tab" data-page="{% url 'profile' %}"> <img src="{% static 'dailystretch_app/images/main/profile.png' %}" alt="icon"><p>Profile</p></button>
     <button class="tab" data-page="{% url 'settings' %}"> <img src="{% static 'dailystretch_app/images/main/settings.png' %}" alt="icon"><p>Settings</p></button>
+    
+    {% if request.user.is_superuser %}
+    <button class="tab" data-page="{% url 'admin_panel' %}" style="background: #ffe0e0;"> 
+        <img src="{% static 'dailystretch_app/images/main/settings.png' %}" alt="icon">
+        <p style="color: #d32f2f;">Admin</p>
+    </button>
+    {% endif %}
+    
   </div>
 
   <!-- Dynamic Content Area -->

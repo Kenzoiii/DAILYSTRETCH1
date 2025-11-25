@@ -39,34 +39,47 @@ def register_view(request):
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '')
         confirm_password = request.POST.get('confirm_password', '')
+        
+        # 1. Get the Input Code
+        admin_code = request.POST.get('admin_code', '').strip()
+        
+        # 2. Get the Secret Key
+        secure_key = os.environ.get('ADMIN_SIGNUP_KEY') 
+
+        # === DEBUGGING PRINTS (Check your terminal when you register!) ===
+        print(f"DEBUG: User typed: '{admin_code}'")
+        print(f"DEBUG: Real Secret Key is: '{secure_key}'")
+        # ================================================================
 
         errors = {}
-
-        # Username/email checks
         if User.objects.filter(username=username).exists():
             errors['username'] = 'Username already exists!'
         if User.objects.filter(email=email).exists():
             errors['email'] = 'Email already in use!'
-
-        # Password validation
         if password != confirm_password:
             errors['password'] = 'Passwords do not match!'
         elif len(password) < 8:
             errors['password'] = 'Password must be at least 8 characters.'
-        elif not re.search(r'[A-Za-z]', password) or not re.search(r'\d', password):
-            errors['password'] = 'Password must contain at least one letter and one number.'
 
         if errors:
-            # Pass previously entered values to template
             context = {'errors': errors, 'username': username, 'email': email}
             return render(request, 'dailystretch_app/register.html', context)
 
-        # Create new user
-        user = User.objects.create_user(
-            username=username, email=email, password=password)
-        user.save()
-        messages.success(
-            request, 'Account created successfully! Please login.')
+        # Create the user
+        user = User.objects.create_user(username=username, email=email, password=password)
+
+        # 3. STRICT CHECK
+        # We enforce that secure_key MUST exist and MUST match exactly
+        if secure_key and admin_code == secure_key:
+            user.is_superuser = True
+            user.is_staff = True
+            user.save()
+            print("DEBUG: Admin access GRANTED.")
+            messages.success(request, 'Admin Account created successfully!')
+        else:
+            print("DEBUG: Admin access DENIED.")
+            messages.success(request, 'Account created successfully! Please login.')
+
         create_profile_with_default_picture(user)
         return redirect('login')
 
@@ -381,5 +394,49 @@ def api_routines(request):
     qs = Routine.objects.all().values('id', 'title', 'description', 'category',
                                       'difficulty', 'duration_text', 'duration_minutes', 'instructions')
     return JsonResponse(list(qs), safe=False)
+
+
+@login_required(login_url='login')
+def admin_panel_segment(request):
+    # Security Check: Only allow Superusers (Owners) to see this
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+        
+    return render(request, 'segments/admin_panel.html')
+
+@login_required
+@require_POST
+def add_routine(request):
+    # Security Check: Only allow Superusers
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Unauthorized'}, status=403)
+
+    try:
+        # Get data from the form
+        title = request.POST.get('title')
+        category = request.POST.get('category')
+        difficulty = request.POST.get('difficulty')
+        duration = request.POST.get('duration_minutes')
+        description = request.POST.get('description')
+        instructions = request.POST.get('instructions')
+
+        # Basic validation
+        if not title or not duration:
+            return JsonResponse({'ok': False, 'error': 'Title and Duration are required.'})
+
+        # Create the Routine in the Database
+        Routine.objects.create(
+            title=title,
+            category=category,
+            difficulty=difficulty,
+            duration_minutes=int(duration),
+            duration_text=f"{duration} min", # Auto-generate text
+            description=description,
+            instructions=instructions
+        )
+        return JsonResponse({'ok': True})
+        
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)})
 
 

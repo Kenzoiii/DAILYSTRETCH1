@@ -38,6 +38,8 @@ urlpatterns = [
     path('main/profile/', views.profile_segment, name='profile'),
     path('main/profile/upload-photo/', views.upload_profile_photo, name='upload_profile_photo'),
     path('main/settings/', views.settings_segment, name='settings'),
+    path('main/admin-panel/', views.admin_panel_segment, name='admin_panel'),
+    path('main/add-routine/', views.add_routine, name='add_routine'),
     path('favorite-toggle/', views.favorite_toggle, name='favorite_toggle'),
     path('favorite-list/', views.favorite_list, name='favorite_list'),
     # API
