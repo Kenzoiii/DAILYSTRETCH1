@@ -20,7 +20,9 @@
             
             <h3 id="formTitle">Add New Exercise</h3>
             <form id="routineForm">
-                <input type="hidden" name="routine_id" id="routine_id"> <div class="form-row">
+                {% csrf_token %}
+                <input type="hidden" name="routine_id" id="routine_id"> 
+                <div class="form-row">
                     <div class="form-group">
                         <label>Title</label>
                         <input type="text" name="title" id="id_title" required placeholder="e.g. Morning Yoga">
@@ -121,6 +123,14 @@
             </ul>
         </div>
     </main>
+
+    <script>
+        const ADMIN_CONFIG = {
+            csrfToken: "{{ csrf_token }}",
+            addRoutineUrl: "{% url 'add_routine' %}",
+            toggleAdminUrl: "{% url 'toggle_admin_status' %}"
+        };
+    </script>
 
     <script src="{% static 'dailystretch_app/js/segments/admin_panel.js' %}"></script>
 </body>
