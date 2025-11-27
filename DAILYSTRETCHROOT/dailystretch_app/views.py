@@ -40,17 +40,8 @@ def register_view(request):
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '')
         confirm_password = request.POST.get('confirm_password', '')
-        
-        # 1. Get the Input Code
-        admin_code = request.POST.get('admin_code', '').strip()
-        
-        # 2. Get the Secret Key
-        secure_key = os.environ.get('ADMIN_SIGNUP_KEY') 
 
-        # === DEBUGGING PRINTS (Check your terminal when you register!) ===
-        print(f"DEBUG: User typed: '{admin_code}'")
-        print(f"DEBUG: Real Secret Key is: '{secure_key}'")
-        # ================================================================
+        # REMOVED: Old admin_code and secure_key logic to prevent vulnerability
 
         errors = {}
         if User.objects.filter(username=username).exists():
@@ -69,16 +60,16 @@ def register_view(request):
         # Create the user
         user = User.objects.create_user(username=username, email=email, password=password)
 
-        # 3. STRICT CHECK
-        # We enforce that secure_key MUST exist and MUST match exactly
-        if secure_key and admin_code == secure_key:
+        # 3. FIRST USER STRATEGY (Updated)
+        # If this is the ONLY user in the database (count is 1 because we just created them),
+        # automatically make them the Superuser/Admin.
+        if User.objects.count() == 1:
             user.is_superuser = True
             user.is_staff = True
             user.save()
-            print("DEBUG: Admin access GRANTED.")
-            messages.success(request, 'Admin Account created successfully!')
+            print(f"DEBUG: First user registered. {user.username} promoted to Admin.")
+            messages.success(request, 'Account created! You are the first user and have been promoted to Admin.')
         else:
-            print("DEBUG: Admin access DENIED.")
             messages.success(request, 'Account created successfully! Please login.')
 
         create_profile_with_default_picture(user)

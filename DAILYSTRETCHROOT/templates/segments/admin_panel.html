@@ -77,9 +77,9 @@
                     </div>
                     <div class="actions">
                         <button class="btn btn-sm btn-edit" 
-    onclick="editRoutine('{{ routine.id }}', '{{ routine.title|escapejs }}', '{{ routine.category|escapejs }}', '{{ routine.difficulty|escapejs }}', '{{ routine.duration_minutes }}', '{{ routine.description|escapejs }}', '{{ routine.instructions|escapejs }}')">
-    Edit
-</button>
+                        onclick="editRoutine('{{ routine.id }}', '{{ routine.title|escapejs }}', '{{ routine.category|escapejs }}', '{{ routine.difficulty|escapejs }}', '{{ routine.duration_minutes }}', '{{ routine.description|escapejs }}', '{{ routine.instructions|escapejs }}')">
+                        Edit
+                    </button>
                         <button class="btn btn-sm btn-delete" onclick="deleteRoutine({{ routine.id }})">Delete</button>
                     </div>
                 </li>
@@ -122,6 +122,6 @@
         </div>
     </main>
 
-    <script src="{% static 'dailystretch_app/js/segments/dashboard.js' %}"></script>
+    <script src="{% static 'dailystretch_app/js/segments/admin_panel.js' %}"></script>
 </body>
 </html>

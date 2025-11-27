@@ -1,4 +1,4 @@
-// --- 1. Tab Switching ---
+         // --- 1. Tab Switching ---
         function switchTab(tabName) {
             // Hide all cards
             document.querySelectorAll('.admin-card').forEach(el => el.classList.remove('active'));
@@ -46,7 +46,7 @@
             const id = document.getElementById('routine_id').value;
             
             // Decide URL based on if we have an ID
-            let url = "{% url 'add_routine' %}";
+            url = "{% url 'add_routine' %}";
             if(id) {
                 url = "/main/admin/routine/update/" + id + "/";
             }

@@ -38,10 +38,6 @@
   <input type="password" name="password" placeholder="Password" required>
   <input type="password" name="confirm_password" placeholder="Confirm Password" required>
   {% if errors.password %}<p class="message">{{ errors.password }}</p>{% endif %}
-    <div class="input-group">
-    <label for="admin_code">Admin Code (Optional)</label>
-    <input type="password" id="admin_code" name="admin_code" placeholder="Leave empty if you are a user">
-  </div>
   <button type="submit" class="register-btn">Register</button>
     </form>
 
