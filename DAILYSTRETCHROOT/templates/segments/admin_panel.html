@@ -4,119 +4,124 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/profile.css' %}">
-    <style>
-        /* Specific overrides for the admin form */
-        .admin-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 0.5rem; color: #555; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        .submit-btn {
-            background-color: #6c63ff;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            width: 100%;
-            transition: background 0.3s;
-        }
-        .submit-btn:hover { background-color: #5a52d5; }
-    </style>
+    <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/admin_panel.css' %}">
 </head>
 <body>
-    <main class="profile"> <h2>Admin Control Panel</h2>
-        <p class="subtitle">Add new exercises to the Wellness Library</p>
+    <main class="profile admin-wrapper">
+        <h2 style="margin-bottom: 0.5rem;">Admin Dashboard</h2>
+        <p class="subtitle">Manage content and users.</p>
 
-        <div class="admin-container">
-            <form id="addRoutineForm">
-                <div class="form-group">
-                    <label>Routine Title</label>
-                    <input type="text" name="title" placeholder="e.g., Morning Yoga" required>
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab('library')">Library & Exercises</button>
+            <button class="tab-btn" onclick="switchTab('users')">User Management</button>
+        </div>
+
+        <div id="tab-library" class="admin-card active">
+            
+            <h3 id="formTitle">Add New Exercise</h3>
+            <form id="routineForm">
+                <input type="hidden" name="routine_id" id="routine_id"> <div class="form-row">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="title" id="id_title" required placeholder="e.g. Morning Yoga">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category" id="id_category">
+                            <option value="stretch">Stretch</option>
+                            <option value="breathing">Breathing</option>
+                            <option value="eye-care">Eye Care</option>
+                            <option value="meditation">Meditation</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Category</label>
-                    <select name="category">
-                        <option value="stretch">Stretch</option>
-                        <option value="breathing">Breathing</option>
-                        <option value="eye-care">Eye Care</option>
-                        <option value="meditation">Meditation</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Difficulty</label>
-                    <select name="difficulty">
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Duration (minutes)</label>
-                    <input type="number" name="duration_minutes" placeholder="e.g., 5" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <select name="difficulty" id="id_difficulty">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (mins)</label>
+                        <input type="number" name="duration_minutes" id="id_duration" required placeholder="5">
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label>Description</label>
-                    <textarea name="description" rows="3" placeholder="Short summary..."></textarea>
+                    <textarea name="description" id="id_description" rows="2" placeholder="Short summary"></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>Instructions</label>
-                    <textarea name="instructions" rows="5" placeholder="Step 1: ..."></textarea>
+                    <textarea name="instructions" id="id_instructions" rows="4" placeholder="Detailed steps..."></textarea>
                 </div>
 
-                <button type="submit" class="submit-btn">Add to Library</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn">Add to Library</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;" onclick="resetForm()">Cancel Edit</button>
             </form>
+
+            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #eee;">
+
+            <h3>Existing Exercises</h3>
+            <ul class="item-list">
+                {% for routine in routines %}
+                <li class="list-item" id="routine-row-{{ routine.id }}">
+                    <div class="item-info">
+                        <h4>{{ routine.title }}</h4>
+                        <p>{{ routine.category|title }} • {{ routine.difficulty|title }} • {{ routine.duration_text }}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-sm btn-edit" 
+    onclick="editRoutine('{{ routine.id }}', '{{ routine.title|escapejs }}', '{{ routine.category|escapejs }}', '{{ routine.difficulty|escapejs }}', '{{ routine.duration_minutes }}', '{{ routine.description|escapejs }}', '{{ routine.instructions|escapejs }}')">
+    Edit
+</button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteRoutine({{ routine.id }})">Delete</button>
+                    </div>
+                </li>
+                {% empty %}
+                <p style="color: #999; text-align: center;">No routines found.</p>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div id="tab-users" class="admin-card">
+            <h3>Registered Users</h3>
+            <ul class="item-list">
+                {% for u in users %}
+                <li class="list-item">
+                    <div class="item-info">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <h4>{{ u.username }}</h4>
+                            {% if u.is_superuser %}
+                                <span class="badge badge-admin">Admin</span>
+                            {% else %}
+                                <span class="badge badge-user">User</span>
+                            {% endif %}
+                        </div>
+                        <p>{{ u.email }} • Joined: {{ u.date_joined|date:"M Y" }}</p>
+                    </div>
+                    <div class="actions">
+                        {% if u.id != request.user.id %}
+                            {% if u.is_superuser %}
+                                <button class="btn btn-sm btn-demote" onclick="toggleAdmin('{{ u.id }}', 'demote')">Remove Admin</button>
+                            {% else %}
+                                <button class="btn btn-sm btn-promote" onclick="toggleAdmin('{{ u.id }}', 'promote')">Make Admin</button>
+                            {% endif %}
+                        {% else %}
+                            <span style="font-size: 0.8rem; color:#aaa; font-style: italic;">(You)</span>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
     </main>
 
-    <script>
-        document.getElementById('addRoutineForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const btn = this.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = 'Saving...';
-
-            fetch("{% url 'add_routine' %}", {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.ok) {
-                    alert('Routine added successfully!');
-                    this.reset(); // Clear form
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(err => alert('Something went wrong.'))
-            .finally(() => {
-                btn.innerText = originalText;
-            });
-        });
-    </script>
+    <script src="{% static 'dailystretch_app/js/segments/dashboard.js' %}"></script>
 </body>
 </html>

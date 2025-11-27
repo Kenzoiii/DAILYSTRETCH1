@@ -40,6 +40,9 @@ urlpatterns = [
     path('main/settings/', views.settings_segment, name='settings'),
     path('main/admin-panel/', views.admin_panel_segment, name='admin_panel'),
     path('main/add-routine/', views.add_routine, name='add_routine'),
+    path('main/admin/routine/delete/<int:routine_id>/', views.delete_routine, name='delete_routine'),
+    path('main/admin/routine/update/<int:routine_id>/', views.update_routine, name='update_routine'),
+    path('main/admin/user/toggle/', views.toggle_admin_status, name='toggle_admin_status'),
     path('favorite-toggle/', views.favorite_toggle, name='favorite_toggle'),
     path('favorite-list/', views.favorite_list, name='favorite_list'),
     # API

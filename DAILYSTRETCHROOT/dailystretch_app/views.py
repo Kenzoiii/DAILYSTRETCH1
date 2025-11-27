@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 from .models import Routine, UserSettings, Favorite
 from .models import Profile
 from .models import UserSettings, Favorite
@@ -398,11 +399,20 @@ def api_routines(request):
 
 @login_required(login_url='login')
 def admin_panel_segment(request):
-    # Security Check: Only allow Superusers (Owners) to see this
+    # Security Check: Only allow Superusers
     if not request.user.is_superuser:
         return redirect('dashboard')
-        
-    return render(request, 'segments/admin_panel.html')
+    
+    # Fetch all routines (newest first)
+    routines = Routine.objects.all().order_by('-id')
+    
+    # Fetch all users (sorted by ID)
+    users = User.objects.all().order_by('id')
+
+    return render(request, 'segments/admin_panel.html', {
+        'routines': routines,
+        'users': users
+    })
 
 @login_required
 @require_POST
@@ -439,4 +449,66 @@ def add_routine(request):
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)})
 
+# ====== Admin Actions ======
 
+@login_required
+@require_POST
+def delete_routine(request, routine_id):
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Unauthorized'}, status=403)
+    
+    routine = get_object_or_404(Routine, id=routine_id)
+    routine.delete()
+    return JsonResponse({'ok': True})
+
+@login_required
+@require_POST
+def update_routine(request, routine_id):
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Unauthorized'}, status=403)
+
+    try:
+        routine = get_object_or_404(Routine, id=routine_id)
+        
+        # Update fields
+        routine.title = request.POST.get('title')
+        routine.category = request.POST.get('category')
+        routine.difficulty = request.POST.get('difficulty')
+        duration = request.POST.get('duration_minutes')
+        routine.duration_minutes = int(duration)
+        routine.duration_text = f"{duration} min"
+        routine.description = request.POST.get('description')
+        routine.instructions = request.POST.get('instructions')
+        
+        routine.save()
+        return JsonResponse({'ok': True})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)})
+
+@login_required
+@require_POST
+def toggle_admin_status(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Unauthorized'}, status=403)
+    
+    target_user_id = request.POST.get('user_id')
+    action = request.POST.get('action') # 'promote' or 'demote'
+    
+    try:
+        user = User.objects.get(id=target_user_id)
+        
+        # Prevent removing yourself
+        if user == request.user:
+            return JsonResponse({'ok': False, 'error': "You cannot remove your own admin status."})
+
+        if action == 'promote':
+            user.is_superuser = True
+            user.is_staff = True
+        elif action == 'demote':
+            user.is_superuser = False
+            user.is_staff = False
+        
+        user.save()
+        return JsonResponse({'ok': True})
+    except User.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'User not found'})
