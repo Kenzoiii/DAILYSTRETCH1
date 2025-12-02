@@ -82,7 +82,7 @@
                         onclick="editRoutine('{{ routine.id }}', '{{ routine.title|escapejs }}', '{{ routine.category|escapejs }}', '{{ routine.difficulty|escapejs }}', '{{ routine.duration_minutes }}', '{{ routine.description|escapejs }}', '{{ routine.instructions|escapejs }}')">
                         Edit
                     </button>
-                        <button class="btn btn-sm btn-delete" onclick="deleteRoutine({{ routine.id }})">Delete</button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteRoutine('{{ routine.id }}')">Delete</button>
                     </div>
                 </li>
                 {% empty %}
