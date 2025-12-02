@@ -43,6 +43,9 @@ function durationSeconds(dur) {
 window.initLibrary = window.initLibrary || async function initLibrary(root) {
   try {
     if (!root || !(root instanceof Element)) root = document;
+    
+    // FIX 1: Prevent double initialization
+    if (root.__library_inited) return;
     root.__library_inited = true;
 
     async function fetchApiRoutines() {
@@ -55,6 +58,7 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       if (!resp.ok) return [];
       return await resp.json();
     }
+    
     async function toggleFavorite(routineId, starEl) {
       const resp = await fetch('/favorite-toggle/', {
         method: 'POST',
@@ -76,8 +80,10 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
         }
       }
     }
+
     function renderRoutineCard(r, favs) {
-      const isFav = favs.includes(r.id);
+      // FIX 2: Ensure ID comparison matches string vs int
+      const isFav = favs.map(String).includes(String(r.id));
       return `
         <div class="lib-card" data-category="${r.category || ''}" data-difficulty="${r.difficulty || ''}">
           <div class="lib-card-header">
@@ -94,11 +100,10 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
     }
 
     async function renderRoutines() {
-      const catEl = root.querySelector('#category');
-      const diffEl = root.querySelector('#difficulty');
-      const cat = catEl ? catEl.value : '';
-      const diff = diffEl ? diffEl.value : '';
       const grid = root.querySelector('#libraryGrid');
+      if (!grid) return;
+      
+      // FIX 3: Clear grid before rendering to prevent doubling
       grid.innerHTML = '';
 
       // fetch backend data
@@ -122,6 +127,11 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       // Store for modal lookup:
       root.__library_items = normalized;
 
+      const catEl = root.querySelector('#category');
+      const diffEl = root.querySelector('#difficulty');
+      const cat = catEl ? catEl.value : '';
+      const diff = diffEl ? diffEl.value : '';
+
       let count = 0;
       normalized.forEach(r => {
         const catMatch = !cat || r.category === cat;
@@ -144,12 +154,13 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       });
       grid.querySelectorAll('.routine-btn').forEach(btn => {
         btn.onclick = function () {
+          // Calls the window.openRoutine defined below
           openRoutine(String(btn.getAttribute('data-id')));
         };
       });
     }
 
-    // Modal + timer routines (Universal)
+    // --- RESTORED: Modal + Timer Logic ---
     window.openRoutine = function (idx) {
       if (libraryTimerInterval) clearInterval(libraryTimerInterval);
       const itemsColl = root.__library_items || [];
@@ -164,7 +175,7 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       const timerArea = root.querySelector('#timerArea');
       const modalStartBtn = root.querySelector('#modalStartBtn');
       const modalStopBtn = root.querySelector('#modalStopBtn');
-      const timerDisplay = root.querySelector('#timerDisplay');
+      
       if (!modalBg || !modalContent) return;
       modalBg.style.display = 'flex';
       modalContent.innerHTML = `<strong>${r.title}</strong><br/><br/><span>${r.instructions || r.description || ''}</span>`;
@@ -172,7 +183,9 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       if (timerArea) timerArea.style.display = 'none';
       if (modalStartBtn) modalStartBtn.style.display = '';
       if (modalStopBtn) modalStopBtn.style.display = 'none';
+      
       const durationArg = r.duration_text || (r.duration_minutes ? String(r.duration_minutes) + ' min' : '5 min');
+      
       if (modalStartBtn) modalStartBtn.onclick = function() { startTimer(durationArg, r.title); };
       if (modalStopBtn) modalStopBtn.onclick = function() { closeModal(); };
       modalBg.onclick = function(e) { if (e.target === modalBg) closeModal(); };
@@ -197,11 +210,12 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       const modalStopBtn = root.querySelector('#modalStopBtn');
       const timerArea = root.querySelector('#timerArea');
       const routineTitle = root.querySelector('#routineTitle');
-      const timerDisplay = root.querySelector('#timerDisplay');
+      
       if (modalStartBtn) modalStartBtn.style.display = 'none';
       if (modalStopBtn) modalStopBtn.style.display = '';
       if (timerArea) timerArea.style.display = '';
       if (routineTitle) routineTitle.innerText = title;
+      
       let seconds = durationSeconds(duration);
       updateTimerDisplay(seconds);
       libraryTimerInterval = setInterval(function() {
@@ -209,6 +223,7 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
         updateTimerDisplay(seconds);
         if (seconds <= 0) {
           clearInterval(libraryTimerInterval);
+          const timerDisplay = root.querySelector('#timerDisplay');
           if (timerDisplay) timerDisplay.innerText = 'Routine Complete!';
           setTimeout(closeModal, 1500);
         }
@@ -238,5 +253,9 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
 
 // Boot on page load:
 try {
-  if (document.querySelector && document.querySelector('#libraryGrid')) window.initLibrary(document);
+  const grid = document.querySelector('#libraryGrid');
+  // Check if grid exists and not already inited
+  if (grid && !document.__library_inited) {
+      window.initLibrary(document);
+  }
 } catch (e) { }

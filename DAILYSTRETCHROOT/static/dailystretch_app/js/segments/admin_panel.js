@@ -18,7 +18,11 @@ function editRoutine(id, title, category, difficulty, duration, description, ins
     document.getElementById('id_title').value = title;
     document.getElementById('id_category').value = category;
     document.getElementById('id_difficulty').value = difficulty;
-    document.getElementById('id_duration').value = duration;
+    document.getElementById("id_duration").addEventListener("input", function () {
+    if (this.value < 1) {
+        this.value = 1; 
+        alert("Duration cannot be less than 1 minute.");
+    }});
     document.getElementById('id_description').value = description;
     document.getElementById('id_instructions').value = instructions;
 

@@ -1,54 +1,60 @@
 /* Admin specific styles matching Profile CSS */
-        .admin-wrapper { max-width: 900px; margin: 0 auto; }
-        
-        /* Tabs */
-        .admin-tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
-        .tab-btn {
-            background: none; border: none; font-size: 1.1rem; font-weight: bold; color: #888; cursor: pointer; padding: 0.5rem 1rem;
-            transition: color 0.3s;
-        }
-        .tab-btn.active { color: #6c63ff; border-bottom: 3px solid #6c63ff; margin-bottom: -0.65rem; }
+.admin-wrapper { max-width: 900px; margin: 0 auto; }
 
-        /* Container Cards */
-        .admin-card {
-            background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 2rem; display: none; /* Hidden by default */
-        }
-        .admin-card.active { display: block; }
+/* Tabs */
+.admin-tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+.tab-btn {
+    background: none; border: none; font-size: 1.1rem; font-weight: bold; color: #888; cursor: pointer; padding: 0.5rem 1rem;
+    transition: color 0.3s;
+}
+.tab-btn.active { color: #6c63ff; border-bottom: 3px solid #6c63ff; margin-bottom: -0.65rem; }
 
-        /* Forms */
-        .form-row { display: flex; gap: 1rem; }
-        .form-group { margin-bottom: 1rem; flex: 1; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 0.5rem; color: #555; font-size: 0.9rem; }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 10px; border: 1px solid #eee; background: #f9f9f9;
-            border-radius: 8px; font-size: 1rem; font-family: inherit;
-        }
-        
-        /* Buttons */
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-primary { background-color: #6c63ff; color: white; width: 100%; }
-        .btn-primary:hover { background-color: #5a52d5; }
-        .btn-secondary { background-color: #eee; color: #333; margin-top: 10px; }
-        
-        /* Lists & Tables */
-        .item-list { list-style: none; padding: 0; }
-        .list-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 1rem; border-bottom: 1px solid #f0f0f0;
-        }
-        .list-item:last-child { border-bottom: none; }
-        
-        .item-info h4 { margin: 0; color: #333; }
-        .item-info p { margin: 0; color: #888; font-size: 0.9rem; }
-        
-        .actions { display: flex; gap: 0.5rem; }
-        .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; }
-        .btn-edit { background: #e0e7ff; color: #4338ca; }
-        .btn-delete { background: #fee2e2; color: #dc2626; }
-        .btn-promote { background: #d1fae5; color: #059669; }
-        .btn-demote { background: #fee2e2; color: #dc2626; }
-        
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .badge-admin { background: #d1fae5; color: #059669; }
-        .badge-user { background: #f3f4f6; color: #6b7280; }
+/* Container Cards */
+.admin-card {
+    background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 2rem; display: none; /* Hidden by default */
+}
+.admin-card.active { display: block; }
+
+/* Forms */
+.form-row { display: flex; gap: 1rem; }
+.form-group { margin-bottom: 1rem; flex: 1; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 0.5rem; color: #555; font-size: 0.9rem; }
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px; border: 1px solid #eee; background: #f9f9f9;
+    border-radius: 8px; font-size: 1rem; font-family: inherit;
+}
+
+/* Buttons */
+.btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn-primary { background-color: #6c63ff; color: white; width: 100%; }
+.btn-primary:hover { background-color: #5a52d5; }
+.btn-secondary { background-color: #eee; color: #333; margin-top: 10px; }
+
+/* Lists & Tables */
+.item-list { list-style: none; padding: 0; }
+.list-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem; border-bottom: 1px solid #f0f0f0;
+}
+.list-item:last-child { border-bottom: none; }
+
+.item-info h4 { margin: 0; color: #333; }
+.item-info p { margin: 0; color: #888; font-size: 0.9rem; }
+
+.actions { display: flex; gap: 0.5rem; }
+.btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; }
+.btn-edit { background: #e0e7ff; color: #4338ca; }
+.btn-delete { background: #fee2e2; color: #dc2626; }
+.btn-promote { background: #d1fae5; color: #059669; }
+.btn-demote { background: #fee2e2; color: #dc2626; }
+
+.badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+.badge-admin { background: #d1fae5; color: #059669; }
+.badge-user { background: #f3f4f6; color: #6b7280; }
+.badge-pending { background: #fef3c7; color: #b45309; }
+.badge-banned { background: #fee2e2; color: #dc2626; }
+/* Responsive */
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; }
+}
