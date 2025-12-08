@@ -1,75 +1,76 @@
-const editBtn = document.getElementById('editProfileBtn');
-const modal = document.getElementById('editProfileModal');
-const cancelBtn = document.getElementById('cancelBtn');
+// Initialize the profile segment behaviors for the current container
+function initProfileInternal(container) {
+    // Query elements from the provided container to avoid stale references
+    const editBtn = container.querySelector('#editProfileBtn');
+    const modal = container.querySelector('#editProfileModal');
+    const cancelBtn = container.querySelector('#cancelBtn');
+    const uploadBtn = container.querySelector('#uploadPicBtn');
+    const fileInput = container.querySelector('#profile_picture_external');
 
-function safeOpenModal() {
-    if (!modal) return;
-    modal.classList.add('active');
-}
-
-function safeCloseModal() {
-    if (!modal) return;
-    modal.classList.remove('active');
-}
-
-function prefillModalFromDom() {
-    if (!modal) return;
-    setTimeout(() => {
-        const modalName = document.getElementById('name');
-        const modalBio = document.getElementById('bio');
-        const modalDob = document.getElementById('date_of_birth');
-        const inlineName = document.getElementById('pf-name');
-        const inlineBio = document.getElementById('pf-bio');
-        const profileCard = document.getElementById('profile-card');
-
-        try {
-            if (modalName) {
-                modalName.value = inlineName ? inlineName.value : (profileCard ? profileCard.dataset.name || '' : '');
-            }
-            if (modalBio) {
-                modalBio.value = inlineBio ? inlineBio.value : (profileCard ? profileCard.dataset.bio || '' : '');
-            }
-            if (modalDob) {
-                // attempt to read from data attribute if present
-                modalDob.value = profileCard ? profileCard.dataset.dob || '' : '';
-            }
-        } catch (e) { console.warn('prefill modal', e); }
-    }, 80);
-}
-
-if (editBtn) {
-    editBtn.addEventListener('click', () => {
-        safeOpenModal();
-        prefillModalFromDom();
-    });
-}
-
-if (cancelBtn) {
-    cancelBtn.addEventListener('click', () => {
-        safeCloseModal();
-    });
-}
-
-window.addEventListener('click', (e) => {
-    if (!modal) return;
-    if (e.target === modal) {
-        safeCloseModal();
+    function safeOpenModal() {
+        if (!modal) return;
+        modal.classList.add('active');
     }
-});
 
-    const uploadBtn = document.getElementById('uploadPicBtn');
-    const fileInput = document.getElementById('profile_picture_external');
+    function safeCloseModal() {
+        if (!modal) return;
+        modal.classList.remove('active');
+    }
+
+    function prefillModalFromDom() {
+        if (!modal) return;
+        setTimeout(() => {
+            const modalName = container.querySelector('#name');
+            const modalBio = container.querySelector('#bio');
+            const modalDob = container.querySelector('#date_of_birth');
+            const inlineName = container.querySelector('#pf-name');
+            const inlineBio = container.querySelector('#pf-bio');
+            const profileCard = container.querySelector('#profile-card');
+
+            try {
+                if (modalName) {
+                    modalName.value = inlineName ? inlineName.value : (profileCard ? profileCard.dataset.name || '' : '');
+                }
+                if (modalBio) {
+                    modalBio.value = inlineBio ? inlineBio.value : (profileCard ? profileCard.dataset.bio || '' : '');
+                }
+                if (modalDob) {
+                    modalDob.value = profileCard ? profileCard.dataset.dob || '' : '';
+                }
+            } catch (e) { console.warn('prefill modal', e); }
+        }, 80);
+    }
+
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            safeOpenModal();
+            prefillModalFromDom();
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            safeCloseModal();
+        });
+    }
+
+    // Close modal on outside click
+    container.addEventListener('click', (e) => {
+        if (!modal) return;
+        if (e.target === modal) {
+            safeCloseModal();
+        }
+    });
 
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => {
-        fileInput.click(); 
-    });
+            fileInput.click();
+        });
 
-    
-    fileInput.addEventListener('change', async () => {
+        fileInput.addEventListener('change', async () => {
         if (fileInput.files.length === 0) return;
         const file = fileInput.files[0];
-        console.log('Selected file for upload:', file.name);
+            
 
         // Client-side validation
         const MAX_BYTES = 5 * 1024 * 1024; // 5MB
@@ -93,7 +94,7 @@ window.addEventListener('click', (e) => {
 
 
         let csrf = null;
-        const profileFormEl = document.getElementById('profileForm');
+        const profileFormEl = container.querySelector('#profileForm');
         if (profileFormEl) {
             const csrfEl = profileFormEl.querySelector('input[name=csrfmiddlewaretoken]');
             if (csrfEl) csrf = csrfEl.value;
@@ -109,7 +110,7 @@ window.addEventListener('click', (e) => {
 
 
         uploadBtn.disabled = true;
-        let spinner = document.getElementById('pf-upload-spinner');
+        let spinner = container.querySelector('#pf-upload-spinner');
         if (!spinner) {
             spinner = document.createElement('span');
             spinner.id = 'pf-upload-spinner';
@@ -148,11 +149,11 @@ window.addEventListener('click', (e) => {
                 throw new Error('Server returned non-JSON response');
             }
 
-            console.log('Upload response', data);
+            
             if (data && data.ok) {
                 const url = data.profile_picture_url || '';
                 if (url) {
-                    const imgEl = document.querySelector('.profile-image') || document.getElementById('profileImg');
+                    const imgEl = container.querySelector('.profile-image') || container.querySelector('#profileImg');
                     if (imgEl) imgEl.src = url + '?t=' + Date.now();
                 }
                 showToast('Profile photo updated', 1600);
@@ -166,10 +167,10 @@ window.addEventListener('click', (e) => {
             showToast('Upload failed — check console for details', 3000);
         } finally {
             uploadBtn.disabled = false;
-            const sp = document.getElementById('pf-upload-spinner');
+            const sp = container.querySelector('#pf-upload-spinner');
             if (sp && sp.parentNode) sp.parentNode.removeChild(sp);
         }
-    });
+        });
     }
 
       
@@ -197,10 +198,10 @@ window.addEventListener('click', (e) => {
             } catch (e) { console.warn('toast', e); }
         }
 
-        const nameInput = document.getElementById('name') || document.getElementById('pf-name');
-        const bioInput = document.getElementById('bio') || document.getElementById('pf-bio');
-        const nameCount = document.getElementById('name-count');
-        const bioCount = document.getElementById('bio-count');
+        const nameInput = container.querySelector('#name') || container.querySelector('#pf-name');
+        const bioInput = container.querySelector('#bio') || container.querySelector('#pf-bio');
+        const nameCount = container.querySelector('#name-count');
+        const bioCount = container.querySelector('#bio-count');
 
         // Helper to set value on various inline elements (input/textarea vs non-input)
         function setInlineValue(el, val) {
@@ -228,7 +229,7 @@ window.addEventListener('click', (e) => {
         }
 
         // AJAX submit for the form to give instant feedback and avoid full page reload
-        const profileForm = document.getElementById('profileForm');
+        const profileForm = container.querySelector('#profileForm');
         if (profileForm) {
             profileForm.addEventListener('submit', async (ev) => {
                 ev.preventDefault();
@@ -276,15 +277,15 @@ window.addEventListener('click', (e) => {
                             if (data && data.ok) {
                                 // Update inline fields using server-returned canonical values when available
                                 try {
-                                    const inlineName = document.getElementById('pf-name');
-                                    const inlineBio = document.getElementById('pf-bio');
+                                    const inlineName = container.querySelector('#pf-name');
+                                    const inlineBio = container.querySelector('#pf-bio');
                                     const nameVal = data.username !== undefined ? data.username : fd.get('name');
                                     const bioVal = data.bio !== undefined ? data.bio : fd.get('bio');
                                     if (nameVal !== null && nameVal !== undefined) setInlineValue(inlineName, nameVal);
                                     if (bioVal !== null && bioVal !== undefined) setInlineValue(inlineBio, bioVal);
                                     // if server returned a profile picture url, update it
                                     if (data.profile_picture_url) {
-                                        const imgEl = document.querySelector('.profile-image') || document.getElementById('profileImg');
+                                        const imgEl = container.querySelector('.profile-image') || container.querySelector('#profileImg');
                                         if (imgEl) imgEl.src = data.profile_picture_url + '?t=' + Date.now();
                                     }
                                 } catch (e) { console.warn('update inline fields', e); }
@@ -297,7 +298,7 @@ window.addEventListener('click', (e) => {
                             // fallback: reload page to reflect changes
                             showToast('Profile saved', 1200);
                             safeCloseModal();
-                            setTimeout(() => window.location.reload(), 900);
+                            // Avoid full reload in segment view
                         }
                     }
                 } catch (e) {
@@ -308,3 +309,12 @@ window.addEventListener('click', (e) => {
                 }
             });
         }
+}
+
+// Expose init for segment loader and run immediately if content already present
+// Expose an init callable used by the segment loader.
+// Do NOT self-invoke here to avoid recursive calls with the loader.
+window.initProfile = function(contentArea) {
+    const container = contentArea || document.getElementById('content-area') || document;
+    initProfileInternal(container);
+};

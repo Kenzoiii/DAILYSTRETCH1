@@ -1,6 +1,6 @@
-function initSettingsDarkMode() {
-  const darkModeToggle = document.getElementById('dark-mode-toggle');
-  const label = document.getElementById('theme-label');
+function initSettingsDarkMode(container) {
+  const darkModeToggle = (container || document).querySelector('#dark-mode-toggle');
+  const label = (container || document).querySelector('#theme-label');
   if (!darkModeToggle || !label) return;
 
   darkModeToggle.checked = localStorage.getItem('dark_mode_enabled') === 'true';
@@ -31,6 +31,30 @@ function clearDashboardState() {
     }
 }
 
+// Global init called from settings.html, idempotent and container-scoped
+window.initSettings = function(opts) {
+  try {
+    const contentArea = document.getElementById('content-area') || document;
+    const container = contentArea;
+    initSettingsDarkMode(container);
 
+    const logoutBtn = container.querySelector('#logout-btn');
+    if (logoutBtn && !logoutBtn.__bound) {
+      logoutBtn.__bound = true;
+      logoutBtn.addEventListener('click', (e) => {
+        clearDashboardState();
+        if (opts && opts.logoutUrl) window.location.href = opts.logoutUrl;
+      });
+    }
 
-setTimeout(initSettingsDarkMode, 10);
+    const settingsForm = container.querySelector(`form[action="${opts && opts.settingsUrl ? opts.settingsUrl : ''}"]`) || container.querySelector('form');
+    if (settingsForm && !settingsForm.__bound) {
+      settingsForm.__bound = true;
+      settingsForm.addEventListener('submit', () => {
+        try { localStorage.removeItem('ds_timer_state_v2'); } catch (e) { console.warn('Failed to clear old timer state', e); }
+      });
+    }
+  } catch (e) {
+    console.warn('initSettings error', e);
+  }
+};

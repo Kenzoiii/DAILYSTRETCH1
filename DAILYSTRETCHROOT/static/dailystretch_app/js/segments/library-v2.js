@@ -1,4 +1,7 @@
-let libraryTimerInterval = null;
+window.DS = window.DS || {};
+window.DS.library = window.DS.library || {};
+function getLibTimer() { return window.DS.library.timerInterval || null; }
+function setLibTimer(v) { window.DS.library.timerInterval = v; }
 
 // --- Helper Functions ---
 function getCSRFToken() {
@@ -162,6 +165,7 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
 
     // --- RESTORED: Modal + Timer Logic ---
     window.openRoutine = function (idx) {
+      const libraryTimerInterval = getLibTimer();
       if (libraryTimerInterval) clearInterval(libraryTimerInterval);
       const itemsColl = root.__library_items || [];
       let r = itemsColl.find(it => String(it.id) === String(idx));
@@ -202,6 +206,7 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       if (modalStartBtn) modalStartBtn.style.display = '';
       if (modalStopBtn) modalStopBtn.style.display = 'none';
       if (timerDisplay) timerDisplay.innerText = '';
+      const libraryTimerInterval = getLibTimer();
       if (libraryTimerInterval) clearInterval(libraryTimerInterval);
     }
 
@@ -218,16 +223,17 @@ window.initLibrary = window.initLibrary || async function initLibrary(root) {
       
       let seconds = durationSeconds(duration);
       updateTimerDisplay(seconds);
-      libraryTimerInterval = setInterval(function() {
+      const interval = setInterval(function() {
         seconds--;
         updateTimerDisplay(seconds);
         if (seconds <= 0) {
-          clearInterval(libraryTimerInterval);
+          clearInterval(interval);
           const timerDisplay = root.querySelector('#timerDisplay');
           if (timerDisplay) timerDisplay.innerText = 'Routine Complete!';
           setTimeout(closeModal, 1500);
         }
       }, 1000);
+      setLibTimer(interval);
     }
 
     function updateTimerDisplay(seconds) {

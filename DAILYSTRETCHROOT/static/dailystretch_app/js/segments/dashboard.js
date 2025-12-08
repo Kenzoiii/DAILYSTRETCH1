@@ -4,12 +4,12 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
     if (root.__dashboard_inited) return;
     root.__dashboard_inited = true;
 
-    // Request notification permission upfront
+    // Request notification permission upfront (best-effort, silent on failure)
     try {
       if (window.Notification && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission().catch(() => {});
       }
-    } catch (e) { console.warn('Notification permission request failed', e); }
+    } catch (_) {}
 
     const q = (sel) => root.querySelector(sel);
     const timeDisplay = q('#time-display');
@@ -33,18 +33,19 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       timerSeconds: 0,
       initialSeconds: 0,
       lastUpdate: null,
-
+      
     };
 
     const TIMER_STORAGE_KEY = 'ds_timer_state_v2';
+    const LAST_PAUSED_KEY = 'ds_last_paused_seconds';
 
     // ----------------- TIME FORMATTING -----------------
   function formatTime(s) {
-  const totalSeconds = Math.floor(s); // <- floor it here
-  const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-  const sec = (totalSeconds % 60).toString().padStart(2, '0');
-  return `${m}:${sec}`;
-}
+    const totalSeconds = Math.floor(s);
+    const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const sec = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
 
 
     // ----------------- RENDER UI -----------------
@@ -65,12 +66,13 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
     // ----------------- PERSISTENCE -----------------
     function saveTimerState() {
       try {
-        localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({
+        const payload = {
           isRunning: state.isRunning,
           isStudy: state.isStudy,
           timerSeconds: state.timerSeconds,
-          lastUpdate: state.lastUpdate || Date.now()
-        }));
+          lastUpdate: state.lastUpdate
+        };
+        localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(payload));
       } catch (e) { console.warn('Failed to save timer state', e); }
     }
 
@@ -81,11 +83,33 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
         const saved = JSON.parse(raw);
         if (!saved || typeof saved.timerSeconds !== 'number') return false;
 
+        // Determine resume intent first to guard against unintended elapsed subtraction
+        const RESUME_FLAG = 'ds_timer_resume_on_return';
+        const shouldResume = sessionStorage.getItem(RESUME_FLAG) === '1';
+
+        // If not resuming, ensure no drift and no auto-resume
+        if (!shouldResume) {
+          saved.lastUpdate = null;
+          saved.isRunning = false;
+        }
+
         let restored = saved.timerSeconds;
         const wasRunning = !!saved.isRunning;
-        if (wasRunning && saved.lastUpdate) {
-          const elapsed = Math.floor((Date.now() - Number(saved.lastUpdate)) / 1000);
+        if (wasRunning && saved.lastUpdate && shouldResume) {
+          const elapsedMs = Date.now() - Number(saved.lastUpdate);
+          const elapsed = Math.floor(elapsedMs / 1000);
           restored = Math.max(0, restored - elapsed);
+        }
+
+        // If not resuming, prefer the last explicitly paused time if available
+        if (!shouldResume) {
+          try {
+            const lp = sessionStorage.getItem(LAST_PAUSED_KEY);
+            const lpNum = lp ? Number(lp) : NaN;
+            if (!Number.isNaN(lpNum) && lpNum >= 0) {
+              restored = lpNum;
+            }
+          } catch (_) {}
         }
 
         state.timerSeconds = restored;
@@ -93,9 +117,17 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
         state.initialSeconds = state.isStudy
           ? window.studyDuration * 60
           : window.breakDuration * 60;
-
-        if (wasRunning && restored > 0) startTimer();
-        else state.isRunning = false;
+        // Resume strictly based on an explicit flag, not just previous state
+        if (shouldResume && restored > 0) {
+          startBtn.textContent = '\u23F8 Pause';
+          state.isRunning = true;
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = requestAnimationFrame(tick);
+        } else {
+          state.isRunning = false;
+          startBtn.textContent = '\u25B6 Start';
+          cancelAnimationFrame(animationFrameId);
+        }
 
         return true;
       } catch (e) { console.warn('Failed to load timer state', e); return false; }
@@ -117,7 +149,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
           toast.classList.remove("show");
           setTimeout(() => { toast.style.display = "none"; }, 250);
         }, duration);
-      } catch (e) {}
+      } catch (_) {}
     }
 
     // ----------------- NOTIFICATIONS -----------------
@@ -138,7 +170,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
 
         const alarmEl = document.getElementById('ds-alarm');
         if (alarmEl && typeof alarmEl.play === 'function') alarmEl.play();
-      } catch (e) { console.warn('notifyFinish error', e); }
+      } catch (_) {}
     }
 
     // ----------------- TIMER LOGIC (smooth) -----------------
@@ -147,8 +179,8 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
     function tick() {
       if (!state.isRunning) return;
 
-        const now = Date.now();
-        const elapsed = (now - (state.lastUpdate || now)) / 1000;
+      const now = Date.now();
+      const elapsed = (now - (state.lastUpdate || now)) / 1000;
       state.lastUpdate = now;
 
       state.timerSeconds = Math.max(0, state.timerSeconds - elapsed);
@@ -156,7 +188,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       if (state.timerSeconds <= 0) {
         state.timerSeconds = 0;
 
-        try { sessionStorage.removeItem(sessionKey); } catch (e) {}
+        try { sessionStorage.removeItem(sessionKey); } catch (_) {}
         notifyFinish(); 
         switchMode();
         
@@ -171,14 +203,13 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
     const sessionKey = 'ds_quote_shown';
     function startTimer() {
       if (state.isRunning) return;
-
-
       state.isRunning = true;
       state.lastUpdate = Date.now();
       startBtn.textContent = '\u23F8 Pause';
       cancelAnimationFrame(animationFrameId);
       animationFrameId = requestAnimationFrame(tick);
       saveTimerState();
+      try { sessionStorage.setItem('ds_timer_resume_on_return', '1'); } catch (_) {}
       
     
       if (!sessionStorage.getItem(sessionKey)) {
@@ -217,7 +248,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
         quote = completionQuotes[Math.floor(Math.random() * completionQuotes.length)];
       }
       showToast(quote, 10000);
-      try { sessionStorage.setItem(sessionKey, '1'); } catch (e) { /* ignore */ }
+      try { sessionStorage.setItem(sessionKey, '1'); } catch (_) {}
     }
     }
 
@@ -228,6 +259,10 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       cancelAnimationFrame(animationFrameId);
       state.lastUpdate = null;
       saveTimerState();
+      try {
+        sessionStorage.setItem('ds_timer_resume_on_return', '0');
+        sessionStorage.setItem(LAST_PAUSED_KEY, String(state.timerSeconds));
+      } catch (_) {}
     }
 
     function resetTimer() {
@@ -236,6 +271,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       state.timerSeconds = state.initialSeconds;
       render();
       saveTimerState();
+      try { sessionStorage.setItem('ds_timer_resume_on_return', '0'); } catch (_) {}
     }
 
     function switchMode() {
@@ -245,6 +281,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       state.timerSeconds = state.initialSeconds;
       render();
       saveTimerState();
+      try { sessionStorage.setItem('ds_timer_resume_on_return', '0'); } catch (_) {}
     }
 
     // ----------------- EVENT LISTENERS -----------------
@@ -269,7 +306,40 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       state.timerSeconds = state.initialSeconds;
       render();
       saveTimerState();
+    } else {
+      render();
     }
+
+    // ----------------- PAGE LIFECYCLE SAFEGUARDS -----------------
+    function persistOnHide() {
+      // When leaving the page, avoid unintended resume/drift
+      try {
+        if (!state.isRunning) {
+          state.lastUpdate = null;
+          sessionStorage.setItem('ds_timer_resume_on_return', '0');
+          sessionStorage.setItem(LAST_PAUSED_KEY, String(state.timerSeconds));
+        }
+        saveTimerState();
+      } catch (_) {}
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') persistOnHide();
+    });
+    window.addEventListener('pagehide', persistOnHide);
+    window.addEventListener('beforeunload', persistOnHide);
+
+    // Proactive: when user clicks navigation links, persist paused state to avoid drift
+    document.addEventListener('click', (ev) => {
+      const t = ev.target;
+      const anchor = (t && t.closest) ? t.closest('a[href]') : null;
+      if (!anchor) return;
+      const href = anchor.getAttribute('href') || '';
+      // Only act for navigation (not JS anchors) and only when paused
+      if (!href.startsWith('#') && !state.isRunning) {
+        persistOnHide();
+      }
+    });
 
     // ----------------- STRETCH & HYDRATION REMINDERS -----------------
     const stretchToggle = q('#stretch-toggle');
@@ -293,7 +363,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
           }
           const el = document.getElementById('ds-reminder-alarm');
           if (el && typeof el.play === 'function') el.play();
-        } catch (e) { console.warn('reminder error', e); }
+        } catch (_) {}
 
         return setTimeout(reminder, (window.reminderIntervalMinutes || 30) * 60 * 1000);
       }

@@ -15,7 +15,7 @@
         <div class="lib-card">
           <div class="lib-card-header">
             <strong>{{ routine.title }}</strong>
-            <span class="star active" style="color:#e7b900;">★</span>
+            <span class="star active" data-id="{{ routine.id }}" style="color:#e7b900;">★</span>
           </div>
           <p class="lib-desc">{{ routine.description }}</p>
           <div class="lib-tags">
@@ -23,7 +23,7 @@
             {% if routine.difficulty %}<span class="lib-tag {% if routine.difficulty == 'beginner' %}green{% elif routine.difficulty == 'intermediate' %}orange{% elif routine.difficulty == 'advanced' %}red{% endif %}">{{ routine.difficulty|title }}</span>{% endif %}
             {% if routine.duration_text %}<span class="lib-tag gray">{{ routine.duration_text }}</span>{% endif %}
           </div>
-          <button class="routine-btn" onclick="openRoutineModal('{{ routine.title|escapejs }}', '{{ routine.instructions|default:routine.description|escapejs }}', '{{ routine.duration_text|escapejs }}')">
+          <button class="routine-btn">
             <span style="margin-right:7px;color:#61cfff">▶</span> Start Routine
           </button>
         </div>
@@ -44,5 +44,8 @@
     </div>
   </main>
   <script src="{% static 'dailystretch_app/js/segments/favorites.js' %}"></script>
+  <script>
+    window.initFavorites && window.initFavorites(document.getElementById('content-area') || document);
+  </script>
 </body>
 </html>

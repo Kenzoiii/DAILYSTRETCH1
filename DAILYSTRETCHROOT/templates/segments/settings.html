@@ -15,7 +15,13 @@
       <p>Manage your account and preferences</p>
 
       <div class="account-row">
-        <span class="avatar">&#128100;</span>
+        <span class="avatar">
+          {% if profile and profile.profile_picture %}
+            <img src="{{ profile.profile_picture.url }}" alt="Profile picture" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" />
+          {% else %}
+            <img src="{% static 'dailystretch_app/images/profilepicture.png' %}" alt="Default profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" />
+          {% endif %}
+        </span>
         <div class="user-info">
           <span>{{ request.user.get_full_name|default:request.user.username }}</span>
           <small>{{ request.user.email }}</small>
@@ -55,22 +61,10 @@
   </div>
   <script src="{% static 'dailystretch_app/js/segments/settings.js' %}"></script>
   <script>
-    const logoutUrl = "{% url 'logout' %}";
-    document.getElementById('logout-btn').addEventListener('click', () => {
-    clearDashboardState();
-    window.location.href = logoutUrl;
+    window.initSettings && window.initSettings({
+      logoutUrl: "{% url 'logout' %}",
+      settingsUrl: "{% url 'settings' %}"
     });
-
-    const settingsForm = document.querySelector('form[action="{% url "settings" %}"]');
-    if (settingsForm) {
-      settingsForm.addEventListener('submit', () => {
-      try {
-        localStorage.removeItem('ds_timer_state_v2');
-      } catch (e) {
-        console.warn('Failed to clear old timer state', e);
-      }
-      });
-    }
   </script>
 </body>
 </html>

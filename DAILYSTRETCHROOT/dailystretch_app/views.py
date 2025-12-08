@@ -366,6 +366,8 @@ def update_supabase_profile(user, profile):
 @login_required(login_url='login')
 def settings_segment(request):
     user_settings, created = UserSettings.objects.get_or_create(user=request.user)
+    # Ensure we have a profile available for the current user
+    profile, _ = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
         study = request.POST.get('study_duration')
         brk = request.POST.get('break_duration')
@@ -377,7 +379,10 @@ def settings_segment(request):
         user_settings.save()
         # print("Saved settings:", user_settings.study_duration, user_settings.break_duration)
         return redirect('main')   # This matches the url name for /main/dashboard/
-    return render(request, 'segments/settings.html', {'user_settings': user_settings})
+    return render(request, 'segments/settings.html', {
+        'user_settings': user_settings,
+        'profile': profile,
+    })
 
 
 @login_required(login_url='login')
