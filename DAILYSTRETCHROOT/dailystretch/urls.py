@@ -47,5 +47,6 @@ urlpatterns = [
     path('favorite-list/', views.favorite_list, name='favorite_list'),
     # API
     path('api/routines/', views.api_routines, name='api_routines'),
+    path('api/set-theme/', views.api_set_theme, name='api_set_theme'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

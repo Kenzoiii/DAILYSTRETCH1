@@ -47,7 +47,10 @@
       try {
         var theme = '{{ theme|default:"light" }}'.toLowerCase();
         var isDark = (theme === 'dark');
-        localStorage.setItem('dark_mode_enabled', isDark ? 'true' : 'false');
+        // Only set from server if no preference stored yet
+        if (localStorage.getItem('dark_mode_enabled') === null) {
+          localStorage.setItem('dark_mode_enabled', isDark ? 'true' : 'false');
+        }
       } catch (e) {}
     })();
   </script>

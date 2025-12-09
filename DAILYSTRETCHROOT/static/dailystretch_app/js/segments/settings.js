@@ -17,6 +17,16 @@ function initSettingsDarkMode(container) {
     if (typeof applyDarkModeIfEnabled === 'function') {
       applyDarkModeIfEnabled();
     }
+    // Persist to server
+    try {
+      const theme = darkModeToggle.checked ? 'dark' : 'light';
+      const csrftoken = (document.cookie.split('; ').find(r => r.startsWith('csrftoken=')) || '').split('=')[1] || '';
+      fetch('/api/set-theme/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken },
+        body: new URLSearchParams({ theme })
+      }).catch(() => {});
+    } catch (_) {}
   };
 }
 

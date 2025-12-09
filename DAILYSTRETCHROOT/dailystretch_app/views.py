@@ -433,6 +433,20 @@ def admin_panel_segment(request):
         'users': users
     })
 
+@login_required(login_url='login')
+@require_POST
+def api_set_theme(request):
+    try:
+        theme = request.POST.get('theme', '').lower().strip()
+        if theme not in ('light', 'dark'):
+            return JsonResponse({'ok': False, 'error': 'Invalid theme'}, status=400)
+        us, _ = UserSettings.objects.get_or_create(user=request.user)
+        us.theme = theme
+        us.save()
+        return JsonResponse({'ok': True})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
 @login_required
 @require_POST
 def add_routine(request):
