@@ -9,6 +9,37 @@ html, body {
     color: #1e1e1e;
 }
 
+/* Theme variables */
+:root {
+    --bg: #ffffff;
+    --bg-elev: #f5f6f8;
+    --text: #1e1e1e;
+    --muted: rgba(34,34,34,0.7);
+    --border: rgba(0,0,0,0.08);
+    --card-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    --btn-primary: #0c0c18;
+    --btn-primary-text: #ffffff;
+    --btn-secondary: #f2f2f2;
+    --btn-secondary-text: #333333;
+    --overlay: rgba(0,0,0,0.5);
+    --modal-bg: #ffffff;
+}
+
+body.dark {
+    --bg: #191A23;
+    --bg-elev: #12131a;
+    --text: #e8e8ef;
+    --muted: rgba(220,220,230,0.7);
+    --border: rgba(255,255,255,0.08);
+    --card-shadow: 0 1px 8px rgba(0,0,0,0.35);
+    --btn-primary: #e8e8ef;
+    --btn-primary-text: #0b0c12;
+    --btn-secondary: #1a1b24;
+    --btn-secondary-text: #e8e8ef;
+    --overlay: rgba(0,0,0,0.6);
+    --modal-bg: #12131a;
+}
+
 main.profile {
     padding: 2.5rem;
     width: 90%;
@@ -17,6 +48,8 @@ main.profile {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    background: var(--bg);
+    color: var(--text);
 }
 
 h2 {
@@ -25,21 +58,19 @@ h2 {
     font-size: 1.6rem;
 }
 
-p.subtitle {
-    margin: 0;
-    color: rgba(34,34,34,0.7);
-}
+p.subtitle { margin: 0; color: var(--muted); }
 
 .card {
-    background: white;
+    background: var(--bg-elev);
     border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    border: 0.8px solid rgba(0,0,0,0.06);
+    box-shadow: var(--card-shadow);
+    border: 0.8px solid var(--border);
     display: grid;
     gap: 1rem;
     align-items: center;
     text-align: left;
+    color: var(--text);
 }
 
 .profile-image {
@@ -64,27 +95,18 @@ p.subtitle {
     font-weight: 500;
 }
 
-.profile-info p {
-    margin: 0;
-    color: rgba(34,34,34,0.7);
-    font-size: 0.95rem;
-}
+.profile-info p { margin: 0; color: var(--muted); font-size: 0.95rem; }
 
-.profile-info label {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 10px;
-    display: block;
-}
+.profile-info label { font-size: 0.85rem; color: var(--muted); margin-top: 10px; display: block; }
 
 .profile-info input[type="text"],
 .profile-info textarea {
     padding: 8px;
     border-radius: 8px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border);
     font-size: 0.95rem;
-    color: #1e1e1e;
-    background: #f5f6f8;
+    color: var(--text);
+    background: var(--bg-elev);
 }
 
 .profile-info textarea {
@@ -92,11 +114,7 @@ p.subtitle {
     resize: vertical;
 }
 
-.profile-info small {
-    color: #999;
-    display: block;
-    margin-top: 6px;
-}
+.profile-info small { color: var(--muted); display: block; margin-top: 6px; }
 
 .edit-btn, .save-btn, .cancel-btn {
     padding: 0.7rem 1rem;
@@ -106,11 +124,11 @@ p.subtitle {
     font-family: 'Arimo', sans-serif;
 }
 
-.edit-btn { background: #0c0c18; color: #fff; width: 100%; }
+.edit-btn { background: var(--btn-primary); color: var(--btn-primary-text); width: 100%; }
 .edit-btn:hover { opacity: 0.95; }
 
-.save-btn { background: #0c0c18; color: #fff; }
-.cancel-btn { background: #f2f2f2; color: #333; }
+.save-btn { background: var(--btn-primary); color: var(--btn-primary-text); }
+.cancel-btn { background: var(--btn-secondary); color: var(--btn-secondary-text); }
 
 .upload-small {
     display: inline-flex;
@@ -128,12 +146,7 @@ p.subtitle {
     margin-top: 10px;
 }
 
-.upload-btn-container button {
-    background: #fff;
-    color: #111;
-    border: 1px solid #e6e6e6;
-    box-shadow: none;
-}
+.upload-btn-container button { background: var(--bg); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
 
 .upload-btn-container button img {
     width: 18px;
@@ -145,7 +158,8 @@ p.subtitle {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: var(--overlay);
+    backdrop-filter: blur(4px);
     align-items:center;
     justify-content:center;
     z-index:999;
@@ -154,15 +168,73 @@ p.subtitle {
 .modal.active { display:flex; }
 
 .modal-content {
-    background: white;
+    background: var(--modal-bg);
+    color: var(--text);
     border-radius: 12px;
     padding: 1.25rem;
     width: 100%;
     max-width: 520px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    border: 1px solid var(--border);
+    animation: modalIn 180ms ease-out;
 }
 
 .modal-content h3 { margin-top: 0; }
+
+.modal-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.modal-content label {
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.modal-content input[type="text"],
+.modal-content textarea {
+    width: 95%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.modal-content input[type="text"]:focus,
+.modal-content textarea:focus {
+    outline: none;
+    border-color: rgba(100, 130, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(100, 130, 255, 0.18);
+}
+
+.modal-buttons {
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    margin-top:1rem;
+}
+
+.save-btn, .cancel-btn {
+    min-width: 120px;
+}
+
+.save-btn {
+    background: var(--btn-primary);
+    color: var(--btn-primary-text);
+    transition: transform 120ms ease, filter 120ms ease;
+}
+
+.save-btn:hover { transform: translateY(-1px); filter: brightness(0.98); }
+.cancel-btn:hover { filter: brightness(0.98); }
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(6px) scale(0.992); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
 
 .modal-buttons {
     display:flex;
@@ -181,11 +253,12 @@ p.subtitle {
     position: fixed;
     right: 24px;
     bottom: 24px;
-    background: rgba(10,10,10,0.9);
-    color: #fff;
+    background: var(--bg-elev);
+    color: var(--text);
     padding: 10px 14px;
     border-radius: 10px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border);
     font-size: 14px;
     z-index: 9999;
 }

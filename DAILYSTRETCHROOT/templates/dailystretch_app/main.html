@@ -38,6 +38,54 @@
   <!-- Dynamic Content Area -->
   <div id="content-area"></div>
   <div id="ds-toast"></div>
+  <!-- Global audio elements so sounds work across all segments -->
+  <audio id="ds-alarm" src="{% static 'dailystretch_app/audio/alarm.mp3' %}" preload="auto"></audio>
+  <audio id="ds-reminder-alarm" src="{% static 'dailystretch_app/audio/reminderalarm.mp3' %}" preload="auto"></audio>
+  <!-- Sync dark mode from server-side user settings on login -->
+  <script>
+    (function(){
+      try {
+        var theme = '{{ theme|default:"light" }}'.toLowerCase();
+        var isDark = (theme === 'dark');
+        localStorage.setItem('dark_mode_enabled', isDark ? 'true' : 'false');
+      } catch (e) {}
+    })();
+  </script>
+  <!-- Clean up legacy/unscoped timer state from previous users on login -->
+  <script>
+    (function(){
+      try {
+        var userId = ({{ request.user.id|default:"0" }});
+        var suffix = String(userId || 'anon');
+        var scopedTimerKey = 'ds_timer_state_v2_' + suffix;
+        var scopedPausedKey = 'ds_last_paused_seconds_' + suffix;
+        var scopedStretchKey = 'ds_toggle_stretch_' + suffix;
+        var scopedHydrationKey = 'ds_toggle_hydration_' + suffix;
+        // Remove old unscoped keys
+        try { localStorage.removeItem('ds_timer_state_v2'); } catch(_) {}
+        try { localStorage.removeItem('ds_last_paused_seconds'); } catch(_) {}
+        try { localStorage.removeItem('ds_toggle_stretch'); } catch(_) {}
+        try { localStorage.removeItem('ds_toggle_hydration'); } catch(_) {}
+        // Remove any other users' scoped keys
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (!k) continue;
+          if (k.startsWith('ds_timer_state_v2_') && k !== scopedTimerKey) {
+            try { localStorage.removeItem(k); } catch(_) {}
+          }
+          if (k.startsWith('ds_last_paused_seconds_') && k !== scopedPausedKey) {
+            try { localStorage.removeItem(k); } catch(_) {}
+          }
+          if (k.startsWith('ds_toggle_stretch_') && k !== scopedStretchKey) {
+            try { localStorage.removeItem(k); } catch(_) {}
+          }
+          if (k.startsWith('ds_toggle_hydration_') && k !== scopedHydrationKey) {
+            try { localStorage.removeItem(k); } catch(_) {}
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
 <script src="{% static 'dailystretch_app/js/main.js' %}" defer></script>
 </body>
 </html>

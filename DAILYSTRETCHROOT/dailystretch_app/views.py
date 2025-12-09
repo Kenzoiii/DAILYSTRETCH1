@@ -109,21 +109,33 @@ def logout_view(request):
 # ====== Home Page (Navbar + Island) ======
 @login_required(login_url='login')
 def main_view(request):
-    return render(request, 'dailystretch_app/main.html')
+    # Load theme preference from UserSettings for this user
+    theme = 'light'
+    try:
+        us, _ = UserSettings.objects.get_or_create(user=request.user)
+        theme = us.theme or 'light'
+    except Exception:
+        theme = 'light'
+    return render(request, 'dailystretch_app/main.html', { 'theme': theme })
 
 
 # ====== Segment Views ======
 @login_required(login_url='login')
 def dashboard_segment(request):
-    user_settings, created = UserSettings.objects.get_or_create(user=request.user)
+    # Load durations from UserSettings
+    user_settings, _ = UserSettings.objects.get_or_create(user=request.user)
+    study_duration = user_settings.study_duration
+    break_duration = user_settings.break_duration
+    reminder_interval = 30
     
     # Count the user's favorite routines
     favorite_count = Favorite.objects.filter(user=request.user).count()
     
     return render(request, 'segments/dashboard.html', {
-        'study_duration': user_settings.study_duration,
-        'break_duration': user_settings.break_duration,
-        'favorite_count': favorite_count,  # <-- pass it to the template
+        'study_duration': study_duration,
+        'break_duration': break_duration,
+        'reminder_interval': reminder_interval,
+        'favorite_count': favorite_count,
     })
 
 
@@ -365,7 +377,8 @@ def update_supabase_profile(user, profile):
 
 @login_required(login_url='login')
 def settings_segment(request):
-    user_settings, created = UserSettings.objects.get_or_create(user=request.user)
+    # Use UserSettings for durations
+    user_settings, _ = UserSettings.objects.get_or_create(user=request.user)
     # Ensure we have a profile available for the current user
     profile, _ = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
@@ -373,12 +386,22 @@ def settings_segment(request):
         brk = request.POST.get('break_duration')
         # print("Received POST:", study, brk)
         if study:
-            user_settings.study_duration = int(study)
+            try:
+                user_settings.study_duration = int(study)
+            except Exception:
+                pass
         if brk:
-            user_settings.break_duration = int(brk)
-        user_settings.save()
+            try:
+                user_settings.break_duration = int(brk)
+            except Exception:
+                pass
+        try:
+            user_settings.save()
+        except Exception:
+            pass
         # print("Saved settings:", user_settings.study_duration, user_settings.break_duration)
         return redirect('main')   # This matches the url name for /main/dashboard/
+    # For template compatibility, provide a simple object with expected attributes
     return render(request, 'segments/settings.html', {
         'user_settings': user_settings,
         'profile': profile,

@@ -1,5 +1,16 @@
 window.initDashboard = window.initDashboard || function initDashboard(root) {
   try {
+    // Ensure only one dashboard loop globally; cancel any previous animation frame
+    window.DS = window.DS || {};
+    window.DS.dashboard = window.DS.dashboard || {};
+    if (window.DS.dashboard.animationFrameId) {
+      try { cancelAnimationFrame(window.DS.dashboard.animationFrameId); } catch (_) {}
+      window.DS.dashboard.animationFrameId = null;
+    }
+    if (window.DS.dashboard.finishTimeoutId) {
+      try { clearTimeout(window.DS.dashboard.finishTimeoutId); } catch (_) {}
+      window.DS.dashboard.finishTimeoutId = null;
+    }
     if (!root || !(root instanceof Element)) root = document;
     if (root.__dashboard_inited) return;
     root.__dashboard_inited = true;
@@ -36,8 +47,9 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       
     };
 
-    const TIMER_STORAGE_KEY = 'ds_timer_state_v2';
-    const LAST_PAUSED_KEY = 'ds_last_paused_seconds';
+    const USER_SUFFIX = (window.userKey !== undefined && window.userKey !== null) ? String(window.userKey) : 'anon';
+    const TIMER_STORAGE_KEY = 'ds_timer_state_v2_' + USER_SUFFIX;
+    const LAST_PAUSED_KEY = 'ds_last_paused_seconds_' + USER_SUFFIX;
 
     // ----------------- TIME FORMATTING -----------------
   function formatTime(s) {
@@ -175,6 +187,31 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
 
     // ----------------- TIMER LOGIC (smooth) -----------------
     let animationFrameId = null;
+    // Suppress notifications briefly after reset/switch to avoid stray alarms
+    let suppressNotifyUntil = 0;
+    let finishTimeoutId = null;
+
+    function clearFinishTimeout() {
+      if (finishTimeoutId) { try { clearTimeout(finishTimeoutId); } catch(_) {} finishTimeoutId = null; }
+      window.DS.dashboard.finishTimeoutId = null;
+    }
+
+    function scheduleFinishTimeout() {
+      clearFinishTimeout();
+      if (!state.isRunning) return;
+      const ms = Math.max(0, Math.floor(state.timerSeconds * 1000));
+      finishTimeoutId = setTimeout(() => {
+        // Safety checks
+        if (!state.isRunning) return;
+        state.timerSeconds = 0;
+        saveTimerState();
+        if (Date.now() >= suppressNotifyUntil) {
+          notifyFinish();
+        }
+        switchMode();
+      }, ms);
+      window.DS.dashboard.finishTimeoutId = finishTimeoutId;
+    }
 
     function tick() {
       if (!state.isRunning) return;
@@ -187,17 +224,15 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
 
       if (state.timerSeconds <= 0) {
         state.timerSeconds = 0;
-
         try { sessionStorage.removeItem(sessionKey); } catch (_) {}
-        notifyFinish(); 
-        switchMode();
-        
+        // Let the finish timeout handle notification/switch to avoid double triggers
       }
 
       render();
       saveTimerState();
 
       animationFrameId = requestAnimationFrame(tick);
+      window.DS.dashboard.animationFrameId = animationFrameId;
     }
 
     const sessionKey = 'ds_quote_shown';
@@ -210,6 +245,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       animationFrameId = requestAnimationFrame(tick);
       saveTimerState();
       try { sessionStorage.setItem('ds_timer_resume_on_return', '1'); } catch (_) {}
+      scheduleFinishTimeout();
       
     
       if (!sessionStorage.getItem(sessionKey)) {
@@ -257,6 +293,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       state.isRunning = false;
       startBtn.textContent = '\u25B6 Start';
       cancelAnimationFrame(animationFrameId);
+      clearFinishTimeout();
       state.lastUpdate = null;
       saveTimerState();
       try {
@@ -272,6 +309,9 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       render();
       saveTimerState();
       try { sessionStorage.setItem('ds_timer_resume_on_return', '0'); } catch (_) {}
+      // Suppress finish notifications for 2 seconds after reset to avoid stray alarms
+      suppressNotifyUntil = Date.now() + 2000;
+      clearFinishTimeout();
     }
 
     function switchMode() {
@@ -282,6 +322,8 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       render();
       saveTimerState();
       try { sessionStorage.setItem('ds_timer_resume_on_return', '0'); } catch (_) {}
+      suppressNotifyUntil = Date.now() + 2000;
+      clearFinishTimeout();
     }
 
     // ----------------- EVENT LISTENERS -----------------
@@ -308,6 +350,7 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       saveTimerState();
     } else {
       render();
+      if (state.isRunning && state.timerSeconds > 0) scheduleFinishTimeout();
     }
 
     // ----------------- PAGE LIFECYCLE SAFEGUARDS -----------------
@@ -346,6 +389,9 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
     const hydrationToggle = q('#hydration-toggle');
     let stretchReminderId = null;
     let hydrationReminderId = null;
+    const USER_SUFFIX_REM = (window.userKey !== undefined && window.userKey !== null) ? String(window.userKey) : 'anon';
+    const STRETCH_TOGGLE_KEY = 'ds_toggle_stretch_' + USER_SUFFIX_REM;
+    const HYDRATION_TOGGLE_KEY = 'ds_toggle_hydration_' + USER_SUFFIX_REM;
 
     function clearReminderTimers() {
       if (stretchReminderId) { clearTimeout(stretchReminderId); stretchReminderId = null; }
@@ -377,8 +423,35 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
       hydrationReminderId = scheduleReminder(hydrationToggle, 'Time to hydrate!', 'Hydration reminder');
     }
 
-    if (stretchToggle) stretchToggle.addEventListener('change', scheduleReminders);
-    if (hydrationToggle) hydrationToggle.addEventListener('change', scheduleReminders);
+    // Restore toggle state from storage on init
+    try {
+      if (stretchToggle) {
+        const v = localStorage.getItem(STRETCH_TOGGLE_KEY);
+        if (v === 'on' || v === 'off') {
+          const on = (v === 'on');
+          stretchToggle.checked = on;
+          if (on) { stretchToggle.setAttribute('checked', 'checked'); } else { stretchToggle.removeAttribute('checked'); }
+        }
+      }
+      if (hydrationToggle) {
+        const v = localStorage.getItem(HYDRATION_TOGGLE_KEY);
+        if (v === 'on' || v === 'off') {
+          const on = (v === 'on');
+          hydrationToggle.checked = on;
+          if (on) { hydrationToggle.setAttribute('checked', 'checked'); } else { hydrationToggle.removeAttribute('checked'); }
+        }
+      }
+    } catch (_) {}
+
+    // Persist on change and reschedule reminders
+    if (stretchToggle) stretchToggle.addEventListener('change', () => {
+      try { localStorage.setItem(STRETCH_TOGGLE_KEY, stretchToggle.checked ? 'on' : 'off'); } catch (_) {}
+      scheduleReminders();
+    });
+    if (hydrationToggle) hydrationToggle.addEventListener('change', () => {
+      try { localStorage.setItem(HYDRATION_TOGGLE_KEY, hydrationToggle.checked ? 'on' : 'off'); } catch (_) {}
+      scheduleReminders();
+    });
     scheduleReminders();
 
     // ----------------- INTERVAL BUTTONS -----------------
@@ -419,9 +492,10 @@ window.initDashboard = window.initDashboard || function initDashboard(root) {
   } catch (err) { console.error('initDashboard error', err); }
 };
 
-// Auto-init
+// Auto-init: prefer content-area container to ensure proper re-init on segment switches
 try {
-  if (document.querySelector && document.querySelector('#time-display')) {
-    window.initDashboard(document);
+  const contentArea = document.getElementById('content-area') || document;
+  if (contentArea.querySelector && contentArea.querySelector('#time-display')) {
+    window.initDashboard(contentArea);
   }
 } catch (e) { console.warn('Dashboard auto-init failed', e); }

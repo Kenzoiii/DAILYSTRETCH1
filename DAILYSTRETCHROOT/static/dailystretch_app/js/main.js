@@ -1,6 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
   const tabs = document.querySelectorAll(".tab");
   const contentArea = document.getElementById("content-area");
+  // One-time audio unlock to satisfy browser autoplay policies
+  let audioUnlocked = false;
+  function unlockAudioOnce() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      const a1 = document.getElementById('ds-alarm');
+      const a2 = document.getElementById('ds-reminder-alarm');
+      const tryUnlock = (el) => {
+        if (!el || typeof el.play !== 'function') return;
+        const p = el.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => { try { el.pause(); el.currentTime = 0; } catch (_) {} }).catch(() => {});
+        }
+      };
+      tryUnlock(a1);
+      tryUnlock(a2);
+    } catch (_) {}
+  }
+  // Unlock on first user interaction
+  const userEvents = ['click','touchstart','keydown'];
+  userEvents.forEach(ev => document.addEventListener(ev, unlockAudioOnce, { once: true, passive: true }));
 
   // Global dark mode handler
   function applyDarkModeIfEnabled() {
@@ -15,6 +37,13 @@ document.addEventListener("DOMContentLoaded", () => {
   applyDarkModeIfEnabled();
 
   const loadPage = async (page) => {
+    // Proactively stop any running dashboard timer loop before swapping segments
+    try {
+      if (window.DS && window.DS.dashboard && window.DS.dashboard.animationFrameId) {
+        cancelAnimationFrame(window.DS.dashboard.animationFrameId);
+        window.DS.dashboard.animationFrameId = null;
+      }
+    } catch (_) {}
     try {
       const response = await fetch(page);
       const html = await response.text();

@@ -5,6 +5,12 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import os
 from django.core.files import File
+from django.contrib.postgres.fields import JSONField as PostgresJSONField
+try:
+    # Django 3.1+ has JSONField in django.db.models
+    from django.db.models import JSONField as DjangoJSONField
+except Exception:
+    DjangoJSONField = None
 
 class Routine(models.Model):
     title = models.TextField()
@@ -26,9 +32,21 @@ class UserSettings(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     study_duration = models.PositiveIntegerField(default=25)
     break_duration = models.PositiveIntegerField(default=5)
+    theme = models.CharField(max_length=10, default='light')
 
     def __str__(self):
         return f"{self.user.username}'s Settings"
+
+
+# Ensure a UserSettings row exists for each new User
+@receiver(post_save, sender=User)
+def create_usersettings_for_new_user(sender, instance, created, **kwargs):
+    if not created:
+        return
+    try:
+        UserSettings.objects.get_or_create(user=instance)
+    except Exception:
+        pass
 
 
 class Profile(models.Model):
@@ -70,3 +88,4 @@ class Favorite(models.Model):
 
     class Meta:
         unique_together = ('user', 'routine')
+
