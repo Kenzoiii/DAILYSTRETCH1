@@ -19,10 +19,11 @@ function editRoutine(id, title, category, difficulty, duration, description, ins
     document.getElementById('id_category').value = category;
     document.getElementById('id_difficulty').value = difficulty;
     document.getElementById("id_duration").addEventListener("input", function () {
-    if (this.value < 1) {
-        this.value = 1; 
-        alert("Duration cannot be less than 1 minute.");
-    }});
+        if (this.value < 1) {
+            this.value = 1;
+            notifyAdmin("Duration cannot be less than 1 minute.", "info", "Validation");
+        }
+    });
     document.getElementById('id_description').value = description;
     document.getElementById('id_instructions').value = instructions;
 
@@ -44,10 +45,17 @@ function resetForm() {
 }
 
 // --- 3. Save (Add or Update) ---
+let __adminSubmitting = false;
 document.getElementById('routineForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    if (__adminSubmitting) { return; }
+    __adminSubmitting = true;
     const formData = new FormData(this);
     const id = document.getElementById('routine_id').value;
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = id ? 'Updating…' : 'Saving…'; }
+    if (cancelBtn) { cancelBtn.disabled = true; }
     
     // Use the variable from HTML for the add URL
     let url = ADMIN_CONFIG.addRoutineUrl;
@@ -66,17 +74,27 @@ document.getElementById('routineForm').addEventListener('submit', function(e) {
     .then(res => res.json())
     .then(data => {
         if(data.ok) {
-            alert('Saved successfully!');
-            location.reload();
+            notifyAdmin('Saved successfully!', 'success', 'Success');
+            setTimeout(() => location.reload(), 800);
         } else {
-            alert('Error: ' + data.error);
+            notifyAdmin('Error: ' + (data.error || 'Unknown error'), 'error', 'Error');
+            __adminSubmitting = false;
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = id ? 'Update Exercise' : 'Add to Library'; }
+            if (cancelBtn) { cancelBtn.disabled = false; }
         }
+    });
+    .catch(err => {
+        notifyAdmin('Network error. Please try again.', 'error', 'Error');
+        __adminSubmitting = false;
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = id ? 'Update Exercise' : 'Add to Library'; }
+        if (cancelBtn) { cancelBtn.disabled = false; }
     });
 });
 
 // --- 4. Delete Routine ---
-function deleteRoutine(id) {
-    if(!confirm("Are you sure you want to delete this exercise?")) return;
+async function deleteRoutine(id) {
+    const ok = await confirmAdmin("Are you sure you want to delete this exercise?", { title: 'Delete Exercise', confirmText: 'Delete', danger: true });
+    if(!ok) return;
 
     fetch("/main/admin/routine/delete/" + id + "/", {
         method: 'POST',
@@ -86,19 +104,21 @@ function deleteRoutine(id) {
     .then(data => {
         if(data.ok) {
             document.getElementById('routine-row-' + id).remove();
+            notifyAdmin('Exercise deleted', 'error', 'Deleted');
+            setTimeout(() => {}, 1000);
         } else {
-            alert('Error: ' + data.error);
+            notifyAdmin('Error: ' + (data.error || 'Unknown error'), 'error', 'Error');
         }
     });
 }
 
 // --- 5. Toggle Admin ---
-function toggleAdmin(userId, action) {
+async function toggleAdmin(userId, action) {
     const confirmMsg = action === 'promote' 
         ? "Make this user an Admin? They will have full control." 
         : "Remove Admin privileges from this user?";
-    
-    if(!confirm(confirmMsg)) return;
+    const ok = await confirmAdmin(confirmMsg, { title: action === 'promote' ? 'Promote User' : 'Demote User', confirmText: action === 'promote' ? 'Promote' : 'Remove', danger: action !== 'promote' });
+    if(!ok) return;
 
     const formData = new FormData();
     formData.append('user_id', userId);
@@ -112,9 +132,14 @@ function toggleAdmin(userId, action) {
     .then(res => res.json())
     .then(data => {
         if(data.ok) {
-            location.reload();
+            if (action === 'promote') {
+                notifyAdmin('User promoted to admin', 'success', 'Updated');
+            } else {
+                notifyAdmin('Admin role removed', 'info', 'Updated');
+            }
+            setTimeout(() => location.reload(), 800);
         } else {
-            alert('Error: ' + data.error);
+            notifyAdmin('Error: ' + (data.error || 'Unknown error'), 'error', 'Error');
         }
     });
 }

@@ -21,7 +21,7 @@
 .form-group { margin-bottom: 1rem; flex: 1; }
 .form-group label { display: block; font-weight: bold; margin-bottom: 0.5rem; color: #555; font-size: 0.9rem; }
 .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px; border: 1px solid #eee; background: #f9f9f9;
+    width: 97%; padding: 10px; border: 1px solid #eee; background: #f9f9f9;
     border-radius: 8px; font-size: 1rem; font-family: inherit;
 }
 
@@ -58,3 +58,130 @@
 @media (max-width: 600px) {
     .form-row { flex-direction: column; }
 }
+
+/* Dark Mode Overrides */
+body.dark .admin-tabs { border-bottom-color: #2f2f50; }
+body.dark .tab-btn { color: #b9b6d6; }
+body.dark .tab-btn.active { color: #a684e4; border-bottom-color: #a684e4; }
+
+body.dark .admin-card {
+    background: #232337 !important;
+    color: #f4f6ff !important;
+    box-shadow: 0 4px 18px rgba(30,16,70,0.14);
+}
+
+body.dark .form-group label { color: #d4d8ee; }
+body.dark .form-group input,
+body.dark .form-group select,
+body.dark .form-group textarea {
+    background: #252336 !important;
+    color: #e6e2f5 !important;
+    border: 1px solid #39396a !important;
+}
+
+body.dark .btn { color: #f4f6ff; }
+body.dark .btn-primary { background-color: #a684e4; color: #191923; }
+body.dark .btn-primary:hover { background-color: #9776de; }
+body.dark .btn-secondary { background-color: #323148; color: #e6e2f5; }
+
+body.dark .list-item { border-bottom: 1px solid #2f2f50; }
+body.dark .item-info h4 { color: #e1d9ee; }
+body.dark .item-info p { color: #b9b6d6; }
+
+/* Action buttons in list */
+body.dark .btn-edit { background: #2f3566; color: #cbd5ff; }
+body.dark .btn-delete { background: #5b2430; color: #ffb4be; }
+body.dark .btn-promote { background: #1f3b32; color: #6be5bc; }
+body.dark .btn-demote { background: #5b2430; color: #ffb4be; }
+
+/* Badges */
+body.dark .badge { color: #f4f6ff; }
+body.dark .badge-admin { background: #1f3b32; color: #6be5bc; }
+body.dark .badge-user { background: #2a2a44; color: #c8cbe0; }
+body.dark .badge-pending { background: #3f3a25; color: #ffd590; }
+body.dark .badge-banned { background: #4a1f27; color: #ffb4be; }
+
+/* Admin Panel Inline Notifications (non-toast) */
+.admin-notify-container {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 9998;
+}
+.admin-notify {
+        min-width: 280px;
+        max-width: 420px;
+        background: #ffffff;
+        color: #1e1e1e;
+        border: 1px solid #eaeaea;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+        padding: 12px 14px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0;
+        transform: translateY(-8px);
+        animation: adminNotifyIn 220ms ease forwards;
+}
+.admin-notify .title { font-weight: 600; }
+.admin-notify .msg { opacity: 0.9; }
+.admin-notify .close { margin-left: auto; cursor: pointer; opacity: 0.6; }
+.admin-notify .close:hover { opacity: 1; }
+
+.admin-notify.info { border-left: 4px solid #6c63ff; }
+.admin-notify.success { border-left: 4px solid #22c55e; }
+.admin-notify.error { border-left: 4px solid #ef4444; }
+
+@keyframes adminNotifyIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes adminNotifyOut {
+    to { opacity: 0; transform: translateY(-6px); }
+}
+
+/* Dark mode for inline notifications */
+body.dark .admin-notify { background: #232337; color: #f4f6ff; border-color: #2f2f50; box-shadow: 0 4px 18px rgba(30,16,70,0.14); }
+body.dark .admin-notify.info { border-left-color: #a684e4; }
+body.dark .admin-notify.success { border-left-color: #35d387; }
+body.dark .admin-notify.error { border-left-color: #ff7b7b; }
+
+/* Admin Confirm Modal */
+.admin-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.admin-modal-backdrop.show { display: flex; }
+.admin-modal {
+    width: 420px;
+    max-width: 92vw;
+    background: #fff;
+    color: #1e1e1e;
+    border-radius: 16px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    border: 1px solid #eaeaea;
+}
+.admin-modal .header { padding: 14px 18px; border-bottom: 1px solid #eee; font-weight: 600; }
+.admin-modal .body { padding: 16px 18px; }
+.admin-modal .footer { padding: 12px 18px; display: flex; gap: 10px; justify-content: flex-end; }
+.admin-btn { padding: 10px 16px; border-radius: 10px; border: 1px solid #eaeaea; background: #f5f5f7; cursor: pointer; }
+.admin-btn.primary { background: #6c63ff; color: #fff; border-color: #6c63ff; }
+.admin-btn.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+.admin-btn:hover { filter: brightness(0.98); }
+
+/* Dark mode modal */
+body.dark .admin-modal { background: #232337; color: #f4f6ff; border-color: #2f2f50; box-shadow: 0 10px 28px rgba(30,16,70,0.2); }
+body.dark .admin-modal .header { border-bottom-color: #2f2f50; }
+body.dark .admin-btn { background: #323148; color: #e6e2f5; border-color: #39396a; }
+body.dark .admin-btn.primary { background: #a684e4; border-color: #a684e4; color: #191923; }
+body.dark .admin-btn.danger { background: #ff7b7b; border-color: #ff7b7b; color: #191923; }

@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/admin_panel.css' %}">
+    <!-- Base site styles (includes dark-mode body rules) -->
+    <link rel="stylesheet" href="{% static 'dailystretch_app/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'dailystretch_app/css/segments/admin_panel.css?v=10122022' %}">
 </head>
 <body>
     <main class="profile admin-wrapper">
@@ -25,7 +27,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Title</label>
-                        <input type="text" name="title" id="id_title" required placeholder="e.g. Morning Yoga">
+                        <input type="text" name="title" id="id_title" required placeholder="e.g. Morning Yoga" style="max-width: 92%;">
                     </div>
                     <div class="form-group">
                         <label>Category</label>
@@ -49,7 +51,7 @@
                     </div>
                     <div class="form-group">
                         <label>Duration (mins)</label>
-                        <input type="number" name="duration_minutes" id="id_duration" required placeholder="5" min="1">
+                        <input type="number" name="duration_minutes" id="id_duration" required placeholder="5" min="1" style="max-width: 92%;">
                     </div>
                 </div>
 
@@ -124,14 +126,80 @@
         </div>
     </main>
 
+    <!-- Admin inline notifications (non-toast) -->
+    <div class="admin-notify-container" id="adminNotifyContainer"></div>
+    <!-- Admin confirm modal -->
+    <div class="admin-modal-backdrop" id="adminModal">
+        <div class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
+            <div class="header" id="adminModalTitle">Confirm Action</div>
+            <div class="body" id="adminModalBody">Are you sure?</div>
+            <div class="footer">
+                <button class="admin-btn" id="adminModalCancel">Cancel</button>
+                <button class="admin-btn danger" id="adminModalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const ADMIN_CONFIG = {
             csrfToken: "{{ csrf_token }}",
             addRoutineUrl: "{% url 'add_routine' %}",
             toggleAdminUrl: "{% url 'toggle_admin_status' %}"
         };
+
+        // Admin inline notification helper (non-toast)
+        // type: 'success' | 'error' | 'info'
+        window.notifyAdmin = function(message, type = 'info', title = '') {
+            const container = document.getElementById('adminNotifyContainer');
+            if (!container) return;
+            const el = document.createElement('div');
+            el.className = `admin-notify ${type}`;
+            el.innerHTML = `
+                <div class="title">${title || type.toUpperCase()}</div>
+                <div class="msg">${message}</div>
+                <div class="close" aria-label="Close">✕</div>
+            `;
+            el.querySelector('.close').addEventListener('click', () => removeNotice(el));
+            container.appendChild(el);
+            // Auto-remove after 3s
+            setTimeout(() => removeNotice(el), 3000);
+        };
+
+        function removeNotice(el) {
+            if (!el) return;
+            el.style.animation = 'adminNotifyOut 180ms ease forwards';
+            setTimeout(() => {
+                el.remove();
+            }, 180);
+        }
+
+        // Confirm modal API returning a Promise<boolean>
+        window.confirmAdmin = function(message, opts = { title: 'Confirm Action', confirmText: 'Confirm', danger: false }) {
+            return new Promise((resolve) => {
+                const backdrop = document.getElementById('adminModal');
+                const titleEl = document.getElementById('adminModalTitle');
+                const bodyEl = document.getElementById('adminModalBody');
+                const cancelBtn = document.getElementById('adminModalCancel');
+                const confirmBtn = document.getElementById('adminModalConfirm');
+                if (!backdrop || !titleEl || !bodyEl || !cancelBtn || !confirmBtn) { resolve(false); return; }
+                titleEl.textContent = (opts && opts.title) || 'Confirm Action';
+                bodyEl.textContent = message;
+                confirmBtn.textContent = (opts && opts.confirmText) || 'Confirm';
+                confirmBtn.classList.toggle('danger', !!(opts && opts.danger));
+                backdrop.classList.add('show');
+                const onCancel = () => { cleanup(); resolve(false); };
+                const onConfirm = () => { cleanup(); resolve(true); };
+                function cleanup() {
+                    backdrop.classList.remove('show');
+                    cancelBtn.removeEventListener('click', onCancel);
+                    confirmBtn.removeEventListener('click', onConfirm);
+                }
+                cancelBtn.addEventListener('click', onCancel);
+                confirmBtn.addEventListener('click', onConfirm);
+            });
+        }
     </script>
 
-    <script src="{% static 'dailystretch_app/js/segments/admin_panel.js' %}"></script>
+    <script src="{% static 'dailystretch_app/js/segments/admin_panel.js?v=20251209' %}"></script>
 </body>
 </html>
